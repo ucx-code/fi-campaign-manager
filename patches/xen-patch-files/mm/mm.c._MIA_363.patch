@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIA_363	2020-11-06 19:31:22.124650025 +0000
+@@ -2628,9 +2628,17 @@ for (i = 0;i < count;i++){
+                         rc = mod_l3_entry(va, l3e_from_intpte(req.val), mfn, cmd == MMU_PT_UPDATE_PRESERVE_AD, v);
+                         break;
+                     case PGT_l4_page_table:
+-                        if (unlikely(pg_owner != pt_owner))
++                        if (fi_enabled == 1){
++                            if (tsc_on_injection == 0){
++                                tsc_on_injection = rdtsc();
++                        }
++                        ++iters_after;
++                        break;
++                    }else{
++                        ++iters_before;
++                        if (__builtin_expect(!!(pg_owner != pt_owner), 0))
+                             break;
+-
++                    }
+                         rc = mod_l4_entry(va, l4e_from_intpte(req.val), mfn, cmd == MMU_PT_UPDATE_PRESERVE_AD, v);
+                         if (!rc && pt_owner->arch.pv.xpti){
+                             bool local_in_use = false;

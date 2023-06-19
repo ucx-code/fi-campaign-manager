@@ -1,0 +1,19 @@
+--- mm.c
++++ mm.c._MVAV_25	2020-11-06 19:30:32.669681500 +0000
+@@ -1809,7 +1809,16 @@ if (unlikely((nx & PGT_count_mask) == 0)
+                 flush_tlb_mask(mask);
+             }
+             nx &= ~(PGT_type_mask | PGT_validated);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                ;
++            }else{
++                ++iters_before;
+             nx |= type;
++            }
+             if (type == PGT_writable_page || type == PGT_shared_page)
+                 nx |= PGT_validated;
+         }

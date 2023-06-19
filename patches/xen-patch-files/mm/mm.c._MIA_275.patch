@@ -1,0 +1,25 @@
+--- mm.c
++++ mm.c._MIA_275	2020-11-06 19:30:36.349604749 +0000
+@@ -1911,9 +1911,21 @@ if (!v->arch.old_guest_table)
+     return 0;
+ 
+ rc = _put_page_type(v->arch.old_guest_table, PTF_preemptible | (v->arch.old_guest_table_partial ? PTF_partial_set : 0), v->arch.old_guest_ptpg);
+-if (rc == -ERESTART || rc == -EINTR){
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
+     v->arch.old_guest_table_partial = (rc == -ERESTART);
+     return -ERESTART;
++    }
++}else{
++    ++iters_before;
++    if (rc == -ERESTART || rc == -EINTR){
++        v->arch.old_guest_table_partial = (rc == -ERESTART);
++        return -ERESTART;
++    }
+ }
+ ASSERT(rc == 0);
+ put_page(v->arch.old_guest_table);

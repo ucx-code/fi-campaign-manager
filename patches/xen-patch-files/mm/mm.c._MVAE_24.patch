@@ -1,0 +1,19 @@
+--- mm.c
++++ mm.c._MVAE_24	2020-11-06 19:31:25.004589959 +0000
+@@ -2728,7 +2728,16 @@ out:
+ if (pt_owner != d)
+     rcu_unlock_domain(pt_owner);
+ if (unlikely(!guest_handle_is_null(pdone))){
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     done += i;
++    }
+     copy_to_guest(pdone, &done, 1);
+ }
+ return rc;

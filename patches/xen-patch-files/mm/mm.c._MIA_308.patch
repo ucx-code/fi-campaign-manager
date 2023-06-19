@@ -1,0 +1,43 @@
+--- mm.c
++++ mm.c._MIA_308	2020-11-06 19:31:00.749095852 +0000
+@@ -2183,18 +2183,38 @@ for (i = 0;i < count;i++){
+                 break;
+         }
+         rc = get_page_type_preemptible(page, type);
+-        if (unlikely(rc)){
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            {
++                if (rc == -EINTR)
++                    rc = -ERESTART;
++                else
++                    if (rc != -ERESTART)
++                        gdprintk("<1>", "Error %d while pinning mfn %05lx\n", rc, mfn_x(_mfn(pdx_to_pfn((unsigned long )(((page) - ((struct page_info*)(((((((262UL) >> 8) * (0xffff000000000000UL)) | ((262UL) << 39))) - ((128ULL) << 30))))))))));
++
++                if (page != curr->arch.old_guest_table)
++                    put_page(page);
++
++                break;
++            }
++        }else{
++            ++iters_before;
++            if (__builtin_expect(!!(rc), 0)){
+             if (rc == -EINTR)
+                 rc = -ERESTART;
+             else
+                 if (rc != -ERESTART)
+-                    gdprintk(XENLOG_WARNING, "Error %d while pinning mfn %05lx\n", rc, mfn_x(page_to_mfn(page)));
++                        gdprintk("<1>", "Error %d while pinning mfn %05lx\n", rc, mfn_x(_mfn(pdx_to_pfn((unsigned long )(((page) - ((struct page_info*)(((((((262UL) >> 8) * (0xffff000000000000UL)) | ((262UL) << 39))) - ((128ULL) << 30))))))))));
+ 
+             if (page != curr->arch.old_guest_table)
+                 put_page(page);
+ 
+             break;
+         }
++        }
+         rc = xsm_memory_pin_page(XSM_HOOK, currd, pg_owner, page);
+         if (!rc && unlikely(test_and_set_bit(_PGT_pinned,
+                                                   &page->u.inuse.type_info))){

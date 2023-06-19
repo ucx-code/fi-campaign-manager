@@ -1,0 +1,21 @@
+--- mm.c
++++ mm.c._MIFS_87	2020-11-06 19:30:02.130318457 +0000
+@@ -896,9 +896,17 @@ static int alloc_l2_table(struct page_in
+                 continue;
+             else
+                 if (!(l2e_get_flags(l2e) & _PAGE_PRESENT)){
++                    if (fi_enabled == 1){
++                        if (tsc_on_injection == 0){
++                            tsc_on_injection = rdtsc();
++                        }
++                        ++iters_after;
++                        ;
++                    }else{
++                        ++iters_before;
+                     if (!pv_l1tf_check_l2e(d, l2e))
+                         continue;
+-
++                    }
+                     rc = -EINTR;
+                 }else
+                     rc = get_page_from_l2e(l2e, pfn, d, partial_flags);

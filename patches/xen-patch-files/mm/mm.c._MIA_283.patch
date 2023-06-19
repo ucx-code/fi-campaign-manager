@@ -1,0 +1,25 @@
+--- mm.c
++++ mm.c._MIA_283	2020-11-06 19:30:42.633473687 +0000
+@@ -2005,9 +2005,21 @@ if (unlikely(rc))
+     return rc;
+ 
+ old_base_mfn = pagetable_get_mfn(curr->arch.guest_table);
+-if (mfn_eq(old_base_mfn, mfn)){
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
+     write_ptbase(curr);
+     return 0;
++    }
++}else{
++    ++iters_before;
++    if (mfn_eq(old_base_mfn, mfn)){
++        write_ptbase(curr);
++        return 0;
++    }
+ }
+ rc = get_page_and_type_from_mfn(mfn, PGT_root_page_table, d, PTF_preemptible);
+ switch (rc){

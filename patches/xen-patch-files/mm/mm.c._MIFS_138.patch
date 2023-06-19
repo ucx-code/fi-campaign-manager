@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIFS_138	2020-11-06 19:30:18.857969570 +0000
+@@ -1430,9 +1430,17 @@ static int mod_l3_entry(l3_pgentry_t* pl
+             return rc ? 0 : -EFAULT;
+         }
+         rc = get_page_from_l3e(nl3e, pfn, d, 0);
+-        if (unlikely(rc < 0))
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            if (__builtin_expect(!!(rc < 0), 0))
+             return rc;
+-
++        }
+         rc = 0;
+         nl3e = adjust_guest_l3e(nl3e, d);
+         if (unlikely(!UPDATE_ENTRY(l3, pl3e, ol3e, nl3e, pfn, vcpu,

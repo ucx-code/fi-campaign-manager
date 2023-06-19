@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MFC_409	2020-11-06 19:31:33.504412679 +0000
+@@ -2847,7 +2847,16 @@ if ( (gl1pg->u.inuse.type_info & PGT_typ
+         goto out;
+     }
+ rc = mod_l1_entry(pl1e, val, mfn_x(gl1mfn), MMU_NORMAL_PT_UPDATE, v, pg_owner);
+-page_unlock(gl1pg);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    page_unlock(gl1pg);
++}
+ put_page(gl1pg);
+ out:
+ if (pl1e)

@@ -1,0 +1,33 @@
+--- mm.c
++++ mm.c._MIA_361	2020-11-06 19:31:21.664659619 +0000
+@@ -2616,9 +2616,17 @@ for (i = 0;i < count;i++){
+                         rc = mod_l1_entry(va, l1e_from_intpte(req.val), mfn, cmd, v, pg_owner);
+                         break;
+                     case PGT_l2_page_table:
+-                        if (unlikely(pg_owner != pt_owner))
++                        if (fi_enabled == 1){
++                            if (tsc_on_injection == 0){
++                                tsc_on_injection = rdtsc();
++                        }
++                        ++iters_after;
+                             break;
+-
++                    }else{
++                        ++iters_before;
++                        if (__builtin_expect(!!(pg_owner != pt_owner), 0))
++                            break;
++                    }
+                         rc = mod_l2_entry(va, l2e_from_intpte(req.val), mfn, cmd == MMU_PT_UPDATE_PRESERVE_AD, v);
+                         break;
+                     case PGT_l3_page_table:
+@@ -2662,8 +2670,8 @@ for (i = 0;i < count;i++){
+             }
+ 
+         put_page(page);
+-    }
+-    break;
++}
++break;
+ case MMU_MACHPHYS_UPDATE:
+     if (unlikely(d != pt_owner)){
+         rc = -EPERM;

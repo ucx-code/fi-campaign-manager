@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MIA_368	2020-11-06 19:31:22.880634257 +0000
+@@ -2650,8 +2650,17 @@ for (i = 0;i < count;i++){
+                     break;
+             }
+             page_unlock(page);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                rc = -ERESTART;
++            }else{
++                ++iters_before;
+             if (rc == -EINTR)
+                 rc = -ERESTART;
++            }
+         }else
+             if (get_page_type(page, PGT_writable_page)){
+                 perfc_incr(writable_mmu_updates);

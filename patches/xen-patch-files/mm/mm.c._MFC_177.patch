@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MFC_177	2020-11-06 19:30:15.470040231 +0000
+@@ -1295,7 +1295,16 @@ static int mod_l1_entry(l1_pgentry_t* pl
+         if (cmd != MMU_PT_UPDATE_NO_TRANSLATE && paging_mode_translate(pg_dom)){
+             p2m_type_t p2mt;
+             p2m_query_t q = l1e_get_flags(nl1e) & _PAGE_RW ? P2M_ALLOC | P2M_UNSHARE : P2M_ALLOC;
+-            page = get_page_from_gfn(pg_dom, l1e_get_pfn(nl1e), &p2mt, q);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                ;
++            }else{
++                ++iters_before;
++                page = get_page_from_gfn(pg_dom, ((unsigned long )((((nl1e).l1 & ((((1UL) << 52) - 1) & (~(((1L) << 12) - 1)))) >> 12))), &p2mt, q);
++            }
+             if (p2m_is_paged(p2mt)){
+                 if (page)
+                     put_page(page);

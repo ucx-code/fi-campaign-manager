@@ -1,0 +1,31 @@
+--- mm.c
++++ mm.c._MIA_293	2020-11-06 19:30:48.381353804 +0000
+@@ -2094,11 +2094,25 @@ struct vcpu* curr = current;
+ struct domain* currd = curr->domain;
+ struct domain* pg_owner;
+ int rc = put_old_guest_table(curr);
+-if (unlikely(rc)){
+-    if (likely(rc == -ERESTART))
+-        rc = hypercall_create_continuation(__HYPERVISOR_mmuext_op, "hihi", uops, count, pdone, foreigndom);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        if (__builtin_expect(!!(rc == -ERESTART), 1))
++            rc = hypercall_create_continuation(26, "hihi", uops, count, pdone, foreigndom);
+ 
+     return rc;
++    }
++}else{
++    ++iters_before;
++    if (__builtin_expect(!!(rc), 0)){
++        if (__builtin_expect(!!(rc == -ERESTART), 1))
++            rc = hypercall_create_continuation(26, "hihi", uops, count, pdone, foreigndom);
++
++        return rc;
++    }
+ }
+ if ( unlikely(count == MMU_UPDATE_PREEMPTED) &&
+          likely(guest_handle_is_null(uops)) )

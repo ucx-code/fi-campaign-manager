@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MFC_280	2020-11-06 19:30:43.093464093 +0000
+@@ -2025,7 +2025,16 @@ if ( !VM_ASSIST(d, m2p_strict) && !pagin
+         fill_ro_mpt(mfn);
+ 
+ curr->arch.guest_table = pagetable_from_mfn(mfn);
+-update_cr3(curr);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    update_cr3(curr);
++}
+ write_ptbase(curr);
+ if (likely(mfn_x(old_base_mfn) != 0)){
+     struct page_info* page = mfn_to_page(old_base_mfn);

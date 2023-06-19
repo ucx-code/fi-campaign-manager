@@ -1,0 +1,25 @@
+--- mm.c
++++ mm.c._MIFS_256	2020-11-06 19:31:19.876696910 +0000
+@@ -2602,6 +2602,14 @@ for (i = 0;i < count;i++){
+                 break;
+             }
+             mfn = mfn_x(page_to_mfn(page));
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                ;
++            }else{
++                ++iters_before;
+             if (!mfn_eq(_mfn(mfn), map_mfn)){
+                 if (va)
+                     unmap_domain_page(va);
+@@ -2609,6 +2617,7 @@ for (i = 0;i < count;i++){
+                 va = map_domain_page(_mfn(mfn));
+                 map_mfn = _mfn(mfn);
+             }
++            }
+             va = _p(((unsigned long)va & PAGE_MASK) + (req.ptr & ~PAGE_MASK));
+             if (page_lock(page)){
+                 switch (page->u.inuse.type_info & PGT_type_mask){

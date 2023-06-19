@@ -1,0 +1,40 @@
+--- mm.c
++++ mm.c._WLEC_21	2020-11-06 19:29:52.710514924 +0000
+@@ -652,14 +652,34 @@ static int get_page_and_type_from_mfn(mf
+         return -EINVAL;
+ 
+     rc = _get_page_type(page, type, preemptible);
+-    if (likely(!rc) || partial_set);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        if (__builtin_expect(!!(!rc), 1) && partial_set);
+ 
+     else
+-        if (page == current->arch.old_guest_table || (retain_ref && rc == -ERESTART))
+-            ASSERT(preemptible);
++            if (page == ((get_cpu_info()->current_vcpu))->arch.old_guest_table || (retain_ref && rc == -ERESTART))
++                do{
++                    if (0 && (preemptible)){
++                    }
++                } while (0);
+         else
+             put_page(page);
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(!rc), 1) || partial_set);
+ 
++        else
++            if (page == ((get_cpu_info()->current_vcpu))->arch.old_guest_table || (retain_ref && rc == -ERESTART))
++                do{
++                    if (0 && (preemptible)){
++                    }
++                } while (0);
++            else
++                put_page(page);
++    }
+     return rc;
+ }
+ define_get_linear_pagetable(l2);

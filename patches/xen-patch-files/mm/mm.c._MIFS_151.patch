@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIFS_151	2020-11-06 19:30:22.041903163 +0000
+@@ -1562,9 +1562,17 @@ struct domain* page_get_owner_and_refere
+ int get_page(struct page_info* page, struct domain* domain)
+ {
+     struct domain* owner = page_get_owner_and_reference(page);
+-    if (likely(owner == domain))
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(owner == domain), 1))
+         return 1;
+-
++    }
+     if (!paging_mode_refcounts(domain) && !domain->is_dying)
+         gprintk(XENLOG_INFO,
+                 "Error mfn %"PRI_mfn": rd=%d od=%d caf=%08lx taf=%" PRtype_info "\n",

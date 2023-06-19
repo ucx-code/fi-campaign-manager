@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIFS_178	2020-11-06 19:30:35.157629610 +0000
+@@ -1887,9 +1887,17 @@ ASSERT(rc == 0);
+ int get_page_type(struct page_info* page, unsigned long  type)
+ {
+ int rc = _get_page_type(page, type, false);
+-if (likely(rc == 0))
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    if (__builtin_expect(!!(rc == 0), 1))
+     return 1;
+-
++}
+ ASSERT(rc != -EINTR && rc != -ERESTART);
+ return 0;
+ }

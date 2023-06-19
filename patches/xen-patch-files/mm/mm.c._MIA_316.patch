@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIA_316	2020-11-06 19:31:02.485059645 +0000
+@@ -2224,9 +2224,17 @@ for (i = 0;i < count;i++){
+         }
+         break;
+     case MMUEXT_UNPIN_TABLE:
+-        if (paging_mode_refcounts(pg_owner))
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        break;
++    }else{
++        ++iters_before;
++        if ((!!((pg_owner)->arch.paging.mode & ((1 << 1) << 10))))
+             break;
+-
++    }
+         page = get_page_from_gfn(pg_owner, op.arg1.mfn, NULL, P2M_ALLOC);
+         if (unlikely(!page)){
+             gdprintk(XENLOG_WARNING, "mfn %05lx bad, or bad owner d%d\n", op.arg1.mfn, pg_owner->domain_id);

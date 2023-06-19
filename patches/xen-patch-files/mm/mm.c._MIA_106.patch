@@ -1,0 +1,42 @@
+--- mm.c
++++ mm.c._MIA_106	2020-11-06 19:29:59.050382694 +0000
+@@ -786,13 +786,34 @@ static int put_page_from_l3e(l3_pgentry_
+         return 0;
+     }
+     pg = l3e_get_page(l3e);
+-    if (flags & PTF_defer){
+-        ASSERT(!(flags & PTF_partial_set));
+-        current->arch.old_guest_ptpg = mfn_to_page(_mfn(pfn));
+-        current->arch.old_guest_table = pg;
+-        current->arch.old_guest_table_partial = false;
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
++            do{
++                if (0 && (!(flags & (1 << 0)))){
++                }
++            } while (0);
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_ptpg = (((struct page_info*)(((((((262UL) >> 8) * (0xffff000000000000UL)) | ((262UL) << 39))) - ((128ULL) << 30)))) + pfn_to_pdx(mfn_x(_mfn(pfn))));
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_table = pg;
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_table_partial = 0;
++            return 0;
++        }
++    }else{
++        ++iters_before;
++        if (flags & (1 << 3)){
++            do{
++                if (0 && (!(flags & (1 << 0)))){
++                }
++            } while (0);
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_ptpg = (((struct page_info*)(((((((262UL) >> 8) * (0xffff000000000000UL)) | ((262UL) << 39))) - ((128ULL) << 30)))) + pfn_to_pdx(mfn_x(_mfn(pfn))));
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_table = pg;
++            ((get_cpu_info()->current_vcpu))->arch.old_guest_table_partial = 0;
+         return 0;
+     }
++    }
+     rc = _put_page_type(pg, flags | PTF_preemptible, mfn_to_page(_mfn(pfn)));
+     if (likely(!rc))
+         put_page(pg);

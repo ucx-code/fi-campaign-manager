@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIA_96	2020-11-06 19:29:57.562413728 +0000
+@@ -704,9 +704,17 @@ static int get_page_from_l4e(l4_pgentry_
+         return -EINVAL;
+     }
+     rc = get_page_and_type_from_mfn(l4e_get_mfn(l4e), PGT_l3_page_table, d, flags | PTF_preemptible);
+-    if (unlikely(rc == -EINVAL) && get_l4_linear_pagetable(l4e, pfn, d))
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
+         rc = 0;
+-
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(rc == -EINVAL), 0) && get_l4_linear_pagetable(l4e, pfn, d))
++            rc = 0;
++    }
+     return rc;
+ }
+ static int _put_page_type(struct page_info* page, unsigned int flags, struct page_info* ptpg);

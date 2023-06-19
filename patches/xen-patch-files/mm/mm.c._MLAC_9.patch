@@ -1,0 +1,72 @@
+--- mm.c
++++ mm.c._MLAC_9	2020-11-06 19:30:02.246316037 +0000
+@@ -904,6 +904,37 @@ static int alloc_l2_table(struct page_in
+                     rc = get_page_from_l2e(l2e, pfn, d, partial_flags);
+ 
+         ASSERT(rc != -ERESTART);
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            if (i){
++                page->nr_validated_ptes = i;
++                page->partial_flags = partial_flags;
++                ;
++                rc = -ERESTART;
++            }else
++                if (rc < 0 && rc != -EINTR){
++                    gdprintk("<1>", "Failure in alloc_l2_table: slot %#x\n", i);
++                    do{
++                        if (0 && (((get_cpu_info()->current_vcpu))->arch.old_guest_table == ((void*)(0)))){
++                        }
++                    } while (0);
++                    if (i){
++                        do{
++                            if (0 && (((get_cpu_info()->current_vcpu))->arch.old_guest_table == ((void*)(0)))){
++                            }
++                        } while (0);
++                        page->nr_validated_ptes = i;
++                        page->partial_flags = partial_flags;
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_ptpg = ((void*)(0));
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_table = page;
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_table_partial = 1;
++                    }
++                }
++        }else{
++            ++iters_before;
+         if (rc == -EINTR && i){
+             page->nr_validated_ptes = i;
+             page->partial_flags = partial_flags;
+@@ -911,18 +942,24 @@ static int alloc_l2_table(struct page_in
+             rc = -ERESTART;
+         }else
+             if (rc < 0 && rc != -EINTR){
+-                gdprintk(XENLOG_WARNING, "Failure in alloc_l2_table: slot %#x\n", i);
+-                ASSERT(current->arch.old_guest_table == NULL);
++                    gdprintk("<1>", "Failure in alloc_l2_table: slot %#x\n", i);
++                    do{
++                        if (0 && (((get_cpu_info()->current_vcpu))->arch.old_guest_table == ((void*)(0)))){
++                        }
++                    } while (0);
+                 if (i){
+-                    ASSERT(current->arch.old_guest_table == NULL);
++                        do{
++                            if (0 && (((get_cpu_info()->current_vcpu))->arch.old_guest_table == ((void*)(0)))){
++                            }
++                        } while (0);
+                     page->nr_validated_ptes = i;
+                     page->partial_flags = partial_flags;
+-                    current->arch.old_guest_ptpg = NULL;
+-                    current->arch.old_guest_table = page;
+-                    current->arch.old_guest_table_partial = true;
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_ptpg = ((void*)(0));
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_table = page;
++                        ((get_cpu_info()->current_vcpu))->arch.old_guest_table_partial = 1;
++                    }
+                 }
+             }
+-
+         if (rc < 0)
+             break;
+ 

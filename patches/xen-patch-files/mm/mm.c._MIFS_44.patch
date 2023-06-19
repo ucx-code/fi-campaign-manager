@@ -1,0 +1,24 @@
+--- mm.c
++++ mm.c._MIFS_44	2020-11-06 19:29:51.238545624 +0000
+@@ -597,10 +597,19 @@ int get_page_from_l1e(l1_pgentry_t l1e,
+         goto could_not_pin;
+ 
+     write = (l1f & _PAGE_RW) && ((l1e_owner == pg_owner) || !paging_mode_external(pg_owner));
+-    if (write && !get_page_type(page, PGT_writable_page)){
+-        gdprintk(XENLOG_WARNING, "Could not get page type PGT_writable_page\n");
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        if (write && !get_page_type(page, (7UL << (((1 << 3) << 3) - (3))))){
++            gdprintk("<1>", "Could not get page type PGT_writable_page\n");
+         goto could_not_pin;
+     }
++    }
+     if (pte_flags_to_cacheattr(l1f) != ((page->count_info & PGC_cacheattr_mask) >> PGC_cacheattr_base)){
+         unsigned long x, nx, y = page->count_info;
+         unsigned long cacheattr = pte_flags_to_cacheattr(l1f);

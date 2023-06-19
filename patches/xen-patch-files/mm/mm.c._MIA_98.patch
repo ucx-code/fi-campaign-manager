@@ -1,0 +1,33 @@
+--- mm.c
++++ mm.c._MIA_98	2020-11-06 19:29:57.842407888 +0000
+@@ -721,9 +721,27 @@ void put_page_from_l1e(l1_pgentry_t l1e,
+ 
+     page = mfn_to_page(_mfn(pfn));
+     pg_owner = page_get_owner(page);
+-    if (_PAGE_GNTTAB && (l1e_get_flags(l1e) & _PAGE_GNTTAB) && !l1e_owner->is_shutting_down && !l1e_owner->is_dying){
+-        gdprintk(XENLOG_WARNING, "Attempt to implicitly unmap a granted PTE %016lx\n", l1e_get_intpte(l1e));
+-        domain_crash(l1e_owner);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
++            gdprintk("<1>", "Attempt to implicitly unmap a granted PTE %016lx\n", ((l1e).l1));
++            do{
++                printk("domain_crash called from %s:%d\n", "code.c", 727);
++                __domain_crash(l1e_owner);
++            } while (0);
++        }
++    }else{
++        ++iters_before;
++        if (0 && ((get_pte_flags((l1e).l1)) & 0) && !l1e_owner->is_shutting_down && !l1e_owner->is_dying){
++            gdprintk("<1>", "Attempt to implicitly unmap a granted PTE %016lx\n", ((l1e).l1));
++            do{
++                printk("domain_crash called from %s:%d\n", "code.c", 727);
++                __domain_crash(l1e_owner);
++            } while (0);
++        }
+     }
+     if ((l1e_get_flags(l1e) & _PAGE_RW) && ((l1e_owner == pg_owner) || !paging_mode_external(pg_owner))){
+         put_page_and_type(page);

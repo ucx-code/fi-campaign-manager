@@ -1,0 +1,37 @@
+--- mm.c
++++ mm.c._MIA_324	2020-11-06 19:31:04.857010173 +0000
+@@ -2282,15 +2282,32 @@ case MMUEXT_NEW_USER_BASEPTR:
+ 
+         if (op.arg1.mfn != 0){
+             rc = get_page_and_type_from_mfn(_mfn(op.arg1.mfn), PGT_root_page_table, currd, PTF_preemptible);
+-            if (unlikely(rc)){
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            {
+                 if (rc == -EINTR)
+                     rc = -ERESTART;
+                 else
+                     if (rc != -ERESTART)
+-                        gdprintk(XENLOG_WARNING, "Error %d installing new mfn %05lx\n", rc, op.arg1.mfn);
++                        gdprintk("<1>", "Error %d installing new mfn %05lx\n", rc, op.arg1.mfn);
+ 
+                 break;
+         }
++        }else{
++            ++iters_before;
++            if (__builtin_expect(!!(rc), 0)){
++                if (rc == -EINTR)
++                    rc = -ERESTART;
++                else
++                    if (rc != -ERESTART)
++                        gdprintk("<1>", "Error %d installing new mfn %05lx\n", rc, op.arg1.mfn);
++
++                break;
++            }
++        }
+         if (VM_ASSIST(currd, m2p_strict))
+             zap_ro_mpt(_mfn(op.arg1.mfn));
+     }

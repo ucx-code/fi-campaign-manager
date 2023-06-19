@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIA_282	2020-11-06 19:30:42.465477191 +0000
+@@ -2001,9 +2001,17 @@ if (is_pv_32bit_domain(d)){
+     return 0;
+ }
+ rc = put_old_guest_table(curr);
+-if (unlikely(rc))
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
+     return rc;
+-
++}else{
++    ++iters_before;
++    if (__builtin_expect(!!(rc), 0))
++        return rc;
++}
+ old_base_mfn = pagetable_get_mfn(curr->arch.guest_table);
+ if (mfn_eq(old_base_mfn, mfn)){
+     write_ptbase(curr);

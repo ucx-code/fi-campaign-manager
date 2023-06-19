@@ -1,0 +1,19 @@
+--- mm.c
++++ mm.c._MFC_362	2020-11-06 19:31:18.936716515 +0000
+@@ -2579,7 +2579,16 @@ for (i = 0;i < count;i++){
+                         xsm_needed |= XSM_MMU_UPDATE_WRITE;
+             }
+             if (xsm_needed != xsm_checked){
++                if (fi_enabled == 1){
++                    if (tsc_on_injection == 0){
++                        tsc_on_injection = rdtsc();
++                    }
++                    ++iters_after;
++                    ;
++                }else{
++                    ++iters_before;
+                 rc = xsm_mmu_update(XSM_TARGET, d, pt_owner, pg_owner, xsm_needed);
++                }
+                 if (rc)
+                     break;
+ 

@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIA_405	2020-11-06 19:31:35.508370882 +0000
+@@ -2898,9 +2898,17 @@ switch (flags & UVMF_FLUSHTYPE_MASK){
+ long do_update_va_mapping(unsigned long  va, u64 val64, unsigned long  flags)
+ {
+     int rc = __do_update_va_mapping(va, val64, flags, current->domain);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        rc = hypercall_create_continuation(14, "lll", va, val64, flags);
++    }else{
++        ++iters_before;
+     if (rc == -ERESTART)
+-        rc = hypercall_create_continuation(__HYPERVISOR_update_va_mapping, "lll", va, val64, flags);
+-
++            rc = hypercall_create_continuation(14, "lll", va, val64, flags);
++    }
+     return rc;
+ }
+ 

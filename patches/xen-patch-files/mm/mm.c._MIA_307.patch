@@ -1,0 +1,26 @@
+--- mm.c
++++ mm.c._MIA_307	2020-11-06 19:31:00.545100106 +0000
+@@ -2178,10 +2178,22 @@ for (i = 0;i < count;i++){
+                 break;
+ 
+             page = get_page_from_gfn(pg_owner, op.arg1.mfn, NULL, P2M_ALLOC);
+-            if (unlikely(!page)){
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            {
+                 rc = -EINVAL;
+                 break;
+         }
++        }else{
++            ++iters_before;
++            if (__builtin_expect(!!(!page), 0)){
++                rc = -EINVAL;
++                break;
++            }
++        }
+         rc = get_page_type_preemptible(page, type);
+         if (unlikely(rc)){
+             if (rc == -EINTR)

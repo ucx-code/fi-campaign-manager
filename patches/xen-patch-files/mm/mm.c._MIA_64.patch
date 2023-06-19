@@ -1,0 +1,23 @@
+--- mm.c
++++ mm.c._MIA_64	2020-11-06 19:29:52.570517844 +0000
+@@ -647,10 +647,17 @@ static int get_page_and_type_from_mfn(mf
+     bool preemptible = flags & PTF_preemptible,
+          partial_set = flags & PTF_partial_set,
+          retain_ref  = flags & PTF_retain_ref_on_restart;
+-    if ( likely(!partial_set) &&
+-         unlikely(!get_page_from_mfn(mfn, d)) )
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
+         return -EINVAL;
+-
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(!partial_set), 1) && __builtin_expect(!!(!get_page_from_mfn(mfn, d)), 0))
++            return -EINVAL;
++    }
+     rc = _get_page_type(page, type, preemptible);
+     if (likely(!rc) || partial_set);
+ 

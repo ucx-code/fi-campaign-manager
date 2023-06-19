@@ -1,0 +1,21 @@
+--- mm.c
++++ mm.c._MIFS_99	2020-11-06 19:30:09.326168373 +0000
+@@ -1074,9 +1074,17 @@ static int alloc_l4_table(struct page_in
+ 
+         l4e = pl4e[i];
+         if (!(l4e_get_flags(l4e) & _PAGE_PRESENT)){
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                ;
++            }else{
++                ++iters_before;
+             if (!pv_l1tf_check_l4e(d, l4e))
+                 continue;
+-
++            }
+             rc = -EINTR;
+         }else
+             rc = get_page_from_l4e(l4e, pfn, d, partial_flags | PTF_retain_ref_on_restart);

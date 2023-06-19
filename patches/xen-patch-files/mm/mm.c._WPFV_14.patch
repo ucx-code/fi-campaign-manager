@@ -1,0 +1,19 @@
+--- mm.c
++++ mm.c._WPFV_14	2020-11-06 19:29:43.770701381 +0000
+@@ -405,7 +405,16 @@ void write_ptbase(struct vcpu* v)
+     }else{
+         cpu_info->use_pv_cr3 = false;
+         cpu_info->xen_cr3 = 0;
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            switch_cr3_cr4(v->arch.cr3, max_page);
++        }else{
++            ++iters_before;
+         switch_cr3_cr4(v->arch.cr3, new_cr4);
++        }
+         cpu_info->pv_cr3 = 0;
+     }
+ }

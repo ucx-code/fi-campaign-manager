@@ -1,0 +1,23 @@
+--- mm.c
++++ mm.c._MFC_152	2020-11-06 19:30:08.654182389 +0000
+@@ -1033,10 +1033,16 @@ void init_xen_l4_slots(l4_pgentry_t* l4t
+           : l4e_empty();
+     {
+         unsigned int slots = (short_directmap ? ROOT_PAGETABLE_PV_XEN_SLOTS : ROOT_PAGETABLE_XEN_SLOTS);
+-        memcpy(&l4t[l4_table_offset(XEN_VIRT_START)],
+-               &idle_pg_table[l4_table_offset(XEN_VIRT_START)],
+-               (ROOT_PAGETABLE_FIRST_XEN_SLOT + slots -
+-                l4_table_offset(XEN_VIRT_START)) * sizeof(*l4t));
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            __builtin_memcpy(&l4t[(((((((((((((261UL) >> 8) * (0xffff000000000000UL)) | ((261UL) << 39))) + (((1UL) << 39) / 2)) + ((64ULL) << 30)) + ((1ULL) << 30)) + ((1ULL) << 30)))) >> 39) & ((1 << 9) - 1))], &idle_pg_table[(((((((((((((261UL) >> 8) * (0xffff000000000000UL)) | ((261UL) << 39))) + (((1UL) << 39) / 2)) + ((64ULL) << 30)) + ((1ULL) << 30)) + ((1ULL) << 30)))) >> 39) & ((1 << 9) - 1))], (256 + slots - (((((((((((((261UL) >> 8) * (0xffff000000000000UL)) | ((261UL) << 39))) + (((1UL) << 39) / 2)) + ((64ULL) << 30)) + ((1ULL) << 30)) + ((1ULL) << 30)))) >> 39) & ((1 << 9) - 1))) * sizeof (*l4t));
++        }
+     }
+ }
+ 

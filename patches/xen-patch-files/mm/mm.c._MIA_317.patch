@@ -1,0 +1,29 @@
+--- mm.c
++++ mm.c._MIA_317	2020-11-06 19:31:02.653056141 +0000
+@@ -2228,11 +2228,24 @@ for (i = 0;i < count;i++){
+             break;
+ 
+         page = get_page_from_gfn(pg_owner, op.arg1.mfn, NULL, P2M_ALLOC);
+-        if (unlikely(!page)){
+-            gdprintk(XENLOG_WARNING, "mfn %05lx bad, or bad owner d%d\n", op.arg1.mfn, pg_owner->domain_id);
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
++            gdprintk("<1>", "mfn %05lx bad, or bad owner d%d\n", op.arg1.mfn, pg_owner->domain_id);
+             rc = -EINVAL;
+             break;
+     }
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(!page), 0)){
++            gdprintk("<1>", "mfn %05lx bad, or bad owner d%d\n", op.arg1.mfn, pg_owner->domain_id);
++            rc = -EINVAL;
++            break;
++        }
++    }
+     if (!test_and_clear_bit(_PGT_pinned, &page->u.inuse.type_info)){
+         put_page(page);
+         gdprintk(XENLOG_WARNING, "mfn %05lx not pinned\n", op.arg1.mfn);

@@ -1,0 +1,22 @@
+--- vmcs.c
++++ vmcs.c._MIFS_72	2020-11-04 15:48:22.961860932 +0000
+@@ -545,9 +545,17 @@ void vmx_vmcs_enter(struct vcpu* v)
+ void vmx_vmcs_exit(struct vcpu* v)
+ {
+     struct foreign_vmcs* fv;
+-    if (likely(v == current))
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(v == ((get_cpu_info()->current_vcpu))), 1))
+         return;
+-
++    }
+     fv = &this_cpu(foreign_vmcs);
+     BUG_ON(fv->v != v);
+     BUG_ON(fv->count == 0);

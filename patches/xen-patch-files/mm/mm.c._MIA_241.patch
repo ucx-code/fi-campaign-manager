@@ -1,0 +1,46 @@
+--- mm.c
++++ mm.c._MIA_241	2020-11-06 19:30:30.317730555 +0000
+@@ -1740,19 +1740,38 @@ static int _put_page_type(struct page_in
+         ASSERT((x & PGT_count_mask) != 0);
+         switch (nx & (PGT_locked | PGT_count_mask)){
+             case 0:
+-                if (unlikely((nx & PGT_type_mask) <= PGT_l4_page_table) && likely(nx & (PGT_validated|PGT_partial))){
++                if (fi_enabled == 1){
++                    if (tsc_on_injection == 0){
++                        tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                {
++                    int rc;
++                    nx = x & ~((1UL << (((1 << 3) << 3) - (6))) | (1UL << (((1 << 3) << 3) - (8))));
++                    if (__builtin_expect(!!((y = ((typeof (*(&page->u.inuse.type_info)))(__cmpxchg((&page->u.inuse.type_info), (unsigned long )((x)), (unsigned long )((nx)), sizeof (*(&page->u.inuse.type_info)))))) != x), 0))
++                        break;
++
++                    rc = _put_final_page_type(page, x, preemptible, ptpg);
++                    if (x & (1UL << (((1 << 3) << 3) - (8))))
++                        put_page(page);
++
++                    return rc;
++                }
++            }else{
++                ++iters_before;
++                if (__builtin_expect(!!((nx & (7UL << (((1 << 3) << 3) - (3)))) <= (4UL << (((1 << 3) << 3) - (3)))), 0) && __builtin_expect(!!(nx & ((1UL << (((1 << 3) << 3) - (6))) | (1UL << (((1 << 3) << 3) - (8))))), 1)){
+                     int rc;
+-                    nx = x & ~(PGT_validated | PGT_partial);
+-                    if (unlikely((y = cmpxchg(&page->u.inuse.type_info,
+-                                           x, nx)) != x))
++                    nx = x & ~((1UL << (((1 << 3) << 3) - (6))) | (1UL << (((1 << 3) << 3) - (8))));
++                    if (__builtin_expect(!!((y = ((typeof (*(&page->u.inuse.type_info)))(__cmpxchg((&page->u.inuse.type_info), (unsigned long )((x)), (unsigned long )((nx)), sizeof (*(&page->u.inuse.type_info)))))) != x), 0))
+                         break;
+ 
+                     rc = _put_final_page_type(page, x, preemptible, ptpg);
+-                    if (x & PGT_partial)
++                    if (x & (1UL << (((1 << 3) << 3) - (8))))
+                         put_page(page);
+ 
+                     return rc;
+             }
++            }
+             if (!ptpg || !PGT_type_equal(x, ptpg->u.inuse.type_info)){
+                 set_tlbflush_timestamp(page);
+             }else

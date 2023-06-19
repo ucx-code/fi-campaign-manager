@@ -1,0 +1,27 @@
+--- mm.c
++++ mm.c._MIA_181	2020-11-06 19:30:16.838011700 +0000
+@@ -1342,11 +1342,22 @@ static int mod_l1_entry(l1_pgentry_t* pl
+             put_page(page);
+ 
+         nl1e = adjust_guest_l1e(nl1e, pt_dom);
+-        if (unlikely(!UPDATE_ENTRY(l1, pl1e, ol1e, nl1e, gl1mfn, pt_vcpu,
+-                                    preserve_ad))){
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            {
+             ol1e = nl1e;
+             rc = -EBUSY;
+         }
++        }else{
++            ++iters_before;
++            if (__builtin_expect(!!(!update_intpte(&((*(pl1e)).l1), ((ol1e).l1), ((nl1e).l1), (gl1mfn), (pt_vcpu), (preserve_ad))), 0)){
++                ol1e = nl1e;
++                rc = -EBUSY;
++            }
++        }
+     }else
+         if (pv_l1tf_check_l1e(pt_dom, nl1e))
+             return -ERESTART;

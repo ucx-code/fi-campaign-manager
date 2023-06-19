@@ -1,0 +1,21 @@
+--- mm.c
++++ mm.c._MIA_322	2020-11-06 19:31:04.577016013 +0000
+@@ -2277,9 +2277,17 @@ case MMUEXT_NEW_USER_BASEPTR:
+             break;
+ 
+         old_mfn = pagetable_get_pfn(curr->arch.guest_table_user);
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        break;
++    }else{
++        ++iters_before;
+         if (old_mfn == op.arg1.mfn)
+             break;
+-
++    }
+         if (op.arg1.mfn != 0){
+             rc = get_page_and_type_from_mfn(_mfn(op.arg1.mfn), PGT_root_page_table, currd, PTF_preemptible);
+             if (unlikely(rc)){

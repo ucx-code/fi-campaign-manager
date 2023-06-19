@@ -1,0 +1,26 @@
+--- mm.c
++++ mm.c._MLAC_19	2020-11-06 19:30:29.193753997 +0000
+@@ -1692,10 +1692,22 @@ int free_page_type(struct page_info* pag
+ static int _put_final_page_type(struct page_info* page, unsigned long  type, bool preemptible, struct page_info* ptpg)
+ {
+     int rc = free_page_type(page, type, preemptible);
+-    if (ptpg && PGT_type_equal(type, ptpg->u.inuse.type_info) && (type & PGT_validated) && rc != -EINTR){
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        if ((type & (1UL << (((1 << 3) << 3) - (6))))){
+         dec_linear_uses(page);
+         dec_linear_entries(ptpg);
+     }
++    }else{
++        ++iters_before;
++        if (ptpg && (!(((type) ^ (ptpg->u.inuse.type_info)) & (7UL << (((1 << 3) << 3) - (3))))) && (type & (1UL << (((1 << 3) << 3) - (6)))) && rc != -EINTR){
++            dec_linear_uses(page);
++            dec_linear_entries(ptpg);
++        }
++    }
+     if (rc == 0){
+         ASSERT(!page->linear_pt_count || page_get_owner(page)->is_dying);
+         set_tlbflush_timestamp(page);

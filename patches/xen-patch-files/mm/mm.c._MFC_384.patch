@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MFC_384	2020-11-06 19:31:24.364603307 +0000
+@@ -2709,7 +2709,16 @@ else
+         XEN_GUEST_HANDLE_PARAM(void) null;
+         ASSERT(rc || i == count);
+         set_xen_guest_handle(null, NULL);
+-        rc = hypercall_create_continuation(__HYPERVISOR_mmu_update, "hihi", null, MMU_UPDATE_PREEMPTED, null, rc);
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            rc = hypercall_create_continuation(1, "hihi", null, (~(~0U >> 1)), null, rc);
++        }
+     }
+ 
+ put_pg_owner(pg_owner);

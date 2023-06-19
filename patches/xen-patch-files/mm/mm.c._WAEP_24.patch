@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._WAEP_24	2020-11-06 19:30:19.949946794 +0000
+@@ -1471,7 +1471,16 @@ static int mod_l4_entry(l4_pgentry_t* pl
+ 
+     if (l4e_get_flags(nl4e) & _PAGE_PRESENT){
+         if (unlikely(l4e_get_flags(nl4e) & L4_DISALLOW_MASK)){
+-            gdprintk(XENLOG_WARNING, "Bad L4 flags %x\n", l4e_get_flags(nl4e) & L4_DISALLOW_MASK);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                gdprintk("<1>", "Bad L4 flags %x\n", (get_pte_flags((nl4e).l4)));
++            }else{
++                ++iters_before;
++                gdprintk("<1>", "Bad L4 flags %x\n", (get_pte_flags((nl4e).l4)) & (base_disallow_mask));
++            }
+             return -EINVAL;
+         }
+         if (!l4e_has_changed(ol4e, nl4e, ~FASTPATH_FLAG_WHITELIST)){

@@ -1,0 +1,26 @@
+--- mm.c
++++ mm.c._MIA_301	2020-11-06 19:30:49.637327608 +0000
+@@ -2132,10 +2132,22 @@ if (rc){
+     return rc;
+ }
+ for (i = 0;i < count;i++){
+-    if (curr->arch.old_guest_table || (i && hypercall_preempt_check())){
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
+         rc = -ERESTART;
+         break;
+     }
++    }else{
++        ++iters_before;
++        if (curr->arch.old_guest_table || (i && (__builtin_expect(!!((irq_stat[(((get_cpu_info()->processor_id)))].__softirq_pending) | local_events_need_delivery()), 0)))){
++            rc = -ERESTART;
++            break;
++        }
++    }
+     if (unlikely(__copy_from_guest(&op, uops, 1) != 0)){
+         rc = -EFAULT;
+         break;

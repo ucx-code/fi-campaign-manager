@@ -1,0 +1,22 @@
+--- mm.c
++++ mm.c._MIFS_114	2020-11-06 19:30:14.178067178 +0000
+@@ -1241,10 +1241,19 @@ static int free_l4_table(struct page_inf
+         }
+ 
+     unmap_domain_page(pl4e);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     if (rc >= 0){
+         atomic_dec(&d->arch.pv.nr_l4_pages);
+         rc = 0;
+     }
++    }
+     return rc;
+ }
+ 

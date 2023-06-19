@@ -1,0 +1,28 @@
+--- mm.c
++++ mm.c._MIEB_11	2020-11-06 19:30:09.294169040 +0000
+@@ -1073,14 +1073,22 @@ static int alloc_l4_table(struct page_in
+             continue;
+ 
+         l4e = pl4e[i];
+-        if (!(l4e_get_flags(l4e) & _PAGE_PRESENT)){
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            rc = get_page_from_l4e(l4e, pfn, d, partial_flags | (1 << 4));
++        }else{
++            ++iters_before;
++            if (!((get_pte_flags((l4e).l4)) & (0x001U))){
+             if (!pv_l1tf_check_l4e(d, l4e))
+                 continue;
+ 
+             rc = -EINTR;
+         }else
+-            rc = get_page_from_l4e(l4e, pfn, d, partial_flags | PTF_retain_ref_on_restart);
+-
++                rc = get_page_from_l4e(l4e, pfn, d, partial_flags | (1 << 4));
++        }
+         if (rc == -ERESTART){
+             page->nr_validated_ptes = i;
+             page->partial_flags = PTF_partial_set;

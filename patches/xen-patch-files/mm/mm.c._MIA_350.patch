@@ -1,0 +1,26 @@
+--- mm.c
++++ mm.c._MIA_350	2020-11-06 19:31:13.408831809 +0000
+@@ -2553,10 +2553,22 @@ if ((pg_owner = get_pg_owner((uint16_t)(
+     goto out;
+ }
+ for (i = 0;i < count;i++){
+-    if (curr->arch.old_guest_table || (i && hypercall_preempt_check())){
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
+         rc = -ERESTART;
+         break;
+     }
++    }else{
++        ++iters_before;
++        if (curr->arch.old_guest_table || (i && (__builtin_expect(!!((irq_stat[(((get_cpu_info()->processor_id)))].__softirq_pending) | local_events_need_delivery()), 0)))){
++            rc = -ERESTART;
++            break;
++        }
++    }
+     if (unlikely(__copy_from_guest(&req, ureqs, 1) != 0)){
+         rc = -EFAULT;
+         break;

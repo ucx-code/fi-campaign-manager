@@ -1,0 +1,31 @@
+--- mm.c
++++ mm.c._MIA_342	2020-11-06 19:31:12.220856587 +0000
+@@ -2511,11 +2511,25 @@ bool sync_guest = false;
+ uint32_t xsm_needed = 0;
+ uint32_t xsm_checked = 0;
+ int rc = put_old_guest_table(curr);
+-if (unlikely(rc)){
+-    if (likely(rc == -ERESTART))
+-        rc = hypercall_create_continuation(__HYPERVISOR_mmu_update, "hihi", ureqs, count, pdone, foreigndom);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        if (__builtin_expect(!!(rc == -ERESTART), 1))
++            rc = hypercall_create_continuation(1, "hihi", ureqs, count, pdone, foreigndom);
+ 
+     return rc;
++    }
++}else{
++    ++iters_before;
++    if (__builtin_expect(!!(rc), 0)){
++        if (__builtin_expect(!!(rc == -ERESTART), 1))
++            rc = hypercall_create_continuation(1, "hihi", ureqs, count, pdone, foreigndom);
++
++        return rc;
++    }
+ }
+ if ( unlikely(count == MMU_UPDATE_PREEMPTED) &&
+          likely(guest_handle_is_null(ureqs)) )

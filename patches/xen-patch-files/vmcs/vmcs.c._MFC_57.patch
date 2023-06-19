@@ -1,0 +1,19 @@
+--- vmcs.c
++++ vmcs.c._MFC_57	2020-11-04 15:48:21.169900596 +0000
+@@ -387,7 +387,16 @@ static void vmx_load_vmcs(struct vcpu* v
+         v->arch.hvm.vmx.active_cpu = smp_processor_id();
+     }
+     ASSERT(v->arch.hvm.vmx.active_cpu == smp_processor_id());
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     __vmptrld(v->arch.hvm.vmx.vmcs_pa);
++    }
+     this_cpu(current_vmcs) = v->arch.hvm.vmx.vmcs_pa;
+     local_irq_restore(flags);
+ }

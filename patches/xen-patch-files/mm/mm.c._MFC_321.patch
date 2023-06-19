@@ -1,0 +1,20 @@
+--- mm.c
++++ mm.c._MFC_321	2020-11-06 19:31:04.773011925 +0000
+@@ -2281,7 +2281,16 @@ case MMUEXT_NEW_USER_BASEPTR:
+             break;
+ 
+         if (op.arg1.mfn != 0){
+-            rc = get_page_and_type_from_mfn(_mfn(op.arg1.mfn), PGT_root_page_table, currd, PTF_preemptible);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            rc = get_page_and_type_from_mfn(_mfn(op.arg1.mfn), (4UL << (((1 << 3) << 3) - (3))), currd, (1 << 2));
++        }
+             if (unlikely(rc)){
+                 if (rc == -EINTR)
+                     rc = -ERESTART;

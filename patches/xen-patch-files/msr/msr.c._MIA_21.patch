@@ -1,0 +1,54 @@
+--- msr.c
++++ msr.c._MIA_21	2020-11-06 10:44:58.767381289 +0000
+@@ -211,14 +211,22 @@ switch (msr){
+         if (!cp->feat.ibrsb && !cp->extd.ibpb)
+             goto gp_fault;
+ 
+-        if (val & ~PRED_CMD_IBPB)
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        goto gp_fault;
++    }else{
++        ++iters_before;
++        if (val & ~((1ULL) << 0))
+             goto gp_fault;
+-
++    }
+         if (v == curr)
+             wrmsrl(MSR_PRED_CMD, val);
+ 
+         break;
+-    case MSR_FLUSH_CMD:
++case MSR_FLUSH_CMD:
+         if (!cp->feat.l1d_flush)
+             goto gp_fault;
+ 
+@@ -229,7 +237,7 @@ switch (msr){
+             wrmsrl(MSR_FLUSH_CMD, val);
+ 
+         break;
+-    case MSR_INTEL_MISC_FEATURES_ENABLES:
++case MSR_INTEL_MISC_FEATURES_ENABLES:
+         {
+             bool old_cpuid_faulting = msrs->misc_features_enables.cpuid_faulting;
+             rsvd = ~0ull;
+@@ -244,12 +252,12 @@ switch (msr){
+                 ctxt_switch_levelling(v);
+ 
+             break;
+-    }case MSR_X2APIC_FIRST ... MSR_X2APIC_LAST:
+-    if (!is_hvm_domain(d) || v != curr)
++}case MSR_X2APIC_FIRST ... MSR_X2APIC_LAST:
++if (!is_hvm_domain(d) || v != curr)
+         goto gp_fault;
+ 
+-    ret = guest_wrmsr_x2apic(v, msr, val);
+-    break;
++ret = guest_wrmsr_x2apic(v, msr, val);
++break;
+ case 0x40000000 ... 0x400001ff:
+     if (is_viridian_domain(d)){
+         ret = guest_wrmsr_viridian(v, msr, val);

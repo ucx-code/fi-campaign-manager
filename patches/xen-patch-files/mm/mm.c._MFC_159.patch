@@ -1,0 +1,26 @@
+--- mm.c
++++ mm.c._MFC_159	2020-11-06 19:30:10.614141510 +0000
+@@ -1116,7 +1116,22 @@ static int alloc_l4_table(struct page_in
+         pl4e[i] = adjust_guest_l4e(l4e, d);
+     }
+     if (!rc){
+-        init_xen_l4_slots(pl4e, _mfn(pfn), d, INVALID_MFN, VM_ASSIST(d, m2p_strict));
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            init_xen_l4_slots(pl4e, _mfn(pfn), d, _mfn(~0UL), ({
++                if ((sizeof (*(&(d)->vm_assist)) < 4))
++                    __bitop_bad_size();
++
++                __builtin_constant_p(32) ? constant_test_bit(32, &(d)->vm_assist) : variable_test_bit(32, &(d)->vm_assist);
++            }
++            ));
++        }
+         atomic_inc(&d->arch.pv.nr_l4_pages);
+     }
+     unmap_domain_page(pl4e);

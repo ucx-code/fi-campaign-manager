@@ -1,0 +1,21 @@
+--- mm.c
++++ mm.c._MIA_360	2020-11-06 19:31:20.012694074 +0000
+@@ -2603,9 +2603,17 @@ for (i = 0;i < count;i++){
+             }
+             mfn = mfn_x(page_to_mfn(page));
+             if (!mfn_eq(_mfn(mfn), map_mfn)){
++                if (fi_enabled == 1){
++                    if (tsc_on_injection == 0){
++                        tsc_on_injection = rdtsc();
++                    }
++                    ++iters_after;
++                    unmap_domain_page(va);
++                }else{
++                    ++iters_before;
+                 if (va)
+                     unmap_domain_page(va);
+-
++                }
+                 va = map_domain_page(_mfn(mfn));
+                 map_mfn = _mfn(mfn);
+             }

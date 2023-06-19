@@ -1,0 +1,23 @@
+--- mm.c
++++ mm.c._MIA_242	2020-11-06 19:30:30.477727218 +0000
+@@ -1743,10 +1743,17 @@ static int _put_page_type(struct page_in
+                 if (unlikely((nx & PGT_type_mask) <= PGT_l4_page_table) && likely(nx & (PGT_validated|PGT_partial))){
+                     int rc;
+                     nx = x & ~(PGT_validated | PGT_partial);
+-                    if (unlikely((y = cmpxchg(&page->u.inuse.type_info,
+-                                           x, nx)) != x))
++                    if (fi_enabled == 1){
++                        if (tsc_on_injection == 0){
++                            tsc_on_injection = rdtsc();
++                    }
++                    ++iters_after;
+                         break;
+-
++                }else{
++                    ++iters_before;
++                    if (__builtin_expect(!!((y = ((typeof (*(&page->u.inuse.type_info)))(__cmpxchg((&page->u.inuse.type_info), (unsigned long )((x)), (unsigned long )((nx)), sizeof (*(&page->u.inuse.type_info)))))) != x), 0))
++                        break;
++                }
+                     rc = _put_final_page_type(page, x, preemptible, ptpg);
+                     if (x & PGT_partial)
+                         put_page(page);

@@ -1,0 +1,19 @@
+--- mm.c
++++ mm.c._MVAV_11	2020-11-06 19:30:11.710118652 +0000
+@@ -1161,7 +1161,16 @@ static int free_l2_table(struct page_inf
+     unmap_domain_page(pl2e);
+     if (rc >= 0){
+         page->u.inuse.type_info &= ~PGT_pae_xen_l2;
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
+         rc = 0;
++        }
+     }else
+         if (rc == -ERESTART){
+             page->nr_validated_ptes = i;

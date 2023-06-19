@@ -1,0 +1,92 @@
+--- mm.c
++++ mm.c._WVAV_9	2020-11-06 19:30:28.661765093 +0000
+@@ -1667,7 +1667,16 @@ int free_page_type(struct page_info* pag
+     switch (type & PGT_type_mask){
+         case PGT_l1_page_table:
+             free_l1_table(page);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            rc = 0 ^ 0xff;
++        }else{
++            ++iters_before;
+             rc = 0;
++        }
+             break;
+         case PGT_l2_page_table:
+             ASSERT(preemptible);
+@@ -1685,24 +1694,24 @@ int free_page_type(struct page_info* pag
+             gdprintk(XENLOG_WARNING, "type %016lx mfn %05lx\n", type, mfn_x(page_to_mfn(page)));
+             rc = -EINVAL;
+             BUG();
+-    }
+-    return rc;
++}
++return rc;
+ }
+ 
+ static int _put_final_page_type(struct page_info* page, unsigned long  type, bool preemptible, struct page_info* ptpg)
+ {
+-    int rc = free_page_type(page, type, preemptible);
+-    if (ptpg && PGT_type_equal(type, ptpg->u.inuse.type_info) && (type & PGT_validated) && rc != -EINTR){
++int rc = free_page_type(page, type, preemptible);
++if (ptpg && PGT_type_equal(type, ptpg->u.inuse.type_info) && (type & PGT_validated) && rc != -EINTR){
+         dec_linear_uses(page);
+         dec_linear_entries(ptpg);
+-    }
+-    if (rc == 0){
++}
++if (rc == 0){
+         ASSERT(!page->linear_pt_count || page_get_owner(page)->is_dying);
+         set_tlbflush_timestamp(page);
+ 
+         asm("" : : : "memory");
+         page->u.inuse.type_info--;
+-    }else
++}else
+         if (rc == -EINTR){
+             ASSERT((page->u.inuse.type_info &
+                 (PGT_count_mask|PGT_validated|PGT_partial)) == 1);
+@@ -1717,15 +1726,15 @@ static int _put_final_page_type(struct p
+             page->u.inuse.type_info |= PGT_partial;
+         }
+ 
+-    return rc;
++return rc;
+ }
+ 
+ static int _put_page_type(struct page_info* page, unsigned int flags, struct page_info* ptpg)
+ {
+-    unsigned long nx, x, y = page->u.inuse.type_info;
+-    bool preemptible = flags & PTF_preemptible;
+-    ASSERT(current_locked_page_ne_check(page));
+-    for (;;){
++unsigned long nx, x, y = page->u.inuse.type_info;
++bool preemptible = flags & PTF_preemptible;
++ASSERT(current_locked_page_ne_check(page));
++for (;;){
+         x = y;
+         nx = x - 1;
+         if (!(flags & PTF_partial_set))
+@@ -1767,16 +1776,16 @@ static int _put_page_type(struct page_in
+                 dec_linear_entries(ptpg);
+         }
+         return 0;
+-    case PGT_locked:
++case PGT_locked:
+         ASSERT_UNREACHABLE();
+         return -EILSEQ;
+-    case PGT_locked | 1:
++case PGT_locked | 1:
+         cpu_relax();
+         y = page->u.inuse.type_info;
+         break;
+ }
+ if (preemptible && hypercall_preempt_check())
+-    return -EINTR;
++return -EINTR;
+ }
+ }
+ 

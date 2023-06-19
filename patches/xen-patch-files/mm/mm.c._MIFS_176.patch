@@ -1,0 +1,23 @@
+--- mm.c
++++ mm.c._MIFS_176	2020-11-06 19:30:34.417645043 +0000
+@@ -1865,10 +1865,19 @@ if (d && is_pv_domain(d) && unlikely(nee
+ }
+ }
+ if (unlikely(!(nx & PGT_validated))){
+-if (!(x & PGT_partial)){
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    if (!(x & (1UL << (((1 << 3) << 3) - (8))))){
+     page->nr_validated_ptes = 0;
+     page->partial_flags = 0;
+     page->linear_pt_count = 0;
++    }
+ }
+ rc = alloc_page_type(page, type, preemptible);
+ }
