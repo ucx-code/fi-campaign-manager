@@ -1,0 +1,154 @@
+--- vmx.c
++++ vmx.c._MIA_253	2020-10-20 16:45:31.105514854 +0100
+@@ -2444,41 +2444,104 @@ if (nvmx_n2_vmexit_handler(regs, exit_re
+ if (unlikely(exit_reason & VMX_EXIT_REASONS_FAILED_VMENTRY))
+ return vmx_failed_vmentry(exit_reason, regs);
+ 
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        regs->eflags &= ~(0x00020000 | 0x00003000);
++        regs->eflags |= (v->arch.hvm.vmx.vm86_saved_eflags & 0x00003000);
++        switch (exit_reason){
++            case 0:
++                if (vector != 14 && vector != 2 && vector != 18){
++                default:
++                    ((void)(0));
++                    v->arch.hvm.vmx.vmx_emulate = 1;
++                    do{
++                        if (__builtin_expect(!!(tb_init_done), 0) && 1){
++                            struct 
++                            {
++                                u32 d[6];
++                            } _d;
++                            _d.d[0] = (0);
++                            _d.d[1] = (0);
++                            _d.d[2] = (0);
++                            _d.d[3] = (0);
++                            _d.d[4] = (0);
++                            _d.d[5] = (0);
++                            __trace_var((0x00082000 + 0x22) | (0), 0, sizeof (*_d.d) * 0, &_d);
++                    }
++                } while (0);
++                return;
++            }
++        case 1:
++        case 3:
++        case 4:
++        case 7:
++        case 8:
++        case 41:
++        case 11:
++        case 46:
++        case 47:
++        case 52:
++        case 50:
++        case 53:
++            break;
++    }
++}
++}else{
++++iters_before;
+ if (v->arch.hvm.vmx.vmx_realmode){
+-    regs->eflags &= ~(X86_EFLAGS_VM | X86_EFLAGS_IOPL);
+-    regs->eflags |= (v->arch.hvm.vmx.vm86_saved_eflags & X86_EFLAGS_IOPL);
++    regs->eflags &= ~(0x00020000 | 0x00003000);
++    regs->eflags |= (v->arch.hvm.vmx.vm86_saved_eflags & 0x00003000);
+     switch (exit_reason){
+-        case EXIT_REASON_EXCEPTION_NMI:
+-            if (vector != TRAP_page_fault && vector != TRAP_nmi && vector != TRAP_machine_check){
++        case 0:
++            if (vector != 14 && vector != 2 && vector != 18){
+             default:
+-                perfc_incr(realmode_exits);
++                ((void)(0));
+                 v->arch.hvm.vmx.vmx_emulate = 1;
+-                HVMTRACE_0D(REALMODE_EMULATE);
++                do{
++                    if (__builtin_expect(!!(tb_init_done), 0) && 1){
++                        struct 
++                        {
++                            u32 d[6];
++                        } _d;
++                        _d.d[0] = (0);
++                        _d.d[1] = (0);
++                        _d.d[2] = (0);
++                        _d.d[3] = (0);
++                        _d.d[4] = (0);
++                        _d.d[5] = (0);
++                        __trace_var((0x00082000 + 0x22) | (0), 0, sizeof (*_d.d) * 0, &_d);
++                }
++            } while (0);
+                 return;
+         }
+-    case EXIT_REASON_EXTERNAL_INTERRUPT:
+-    case EXIT_REASON_INIT:
+-    case EXIT_REASON_SIPI:
+-    case EXIT_REASON_PENDING_VIRT_INTR:
+-    case EXIT_REASON_PENDING_VIRT_NMI:
+-    case EXIT_REASON_MCE_DURING_VMENTRY:
+-    case EXIT_REASON_GETSEC:
+-    case EXIT_REASON_ACCESS_GDTR_OR_IDTR:
+-    case EXIT_REASON_ACCESS_LDTR_OR_TR:
+-    case EXIT_REASON_VMX_PREEMPTION_TIMER_EXPIRED:
+-    case EXIT_REASON_INVEPT:
+-    case EXIT_REASON_INVVPID:
++    case 1:
++    case 3:
++    case 4:
++    case 7:
++    case 8:
++    case 41:
++    case 11:
++    case 46:
++    case 47:
++    case 52:
++    case 50:
++    case 53:
+         break;
+ }
+ }
++}
+ hvm_maybe_deassert_evtchn_irq();
+ __vmread(IDT_VECTORING_INFO, &idtv_info);
+ if (exit_reason != EXIT_REASON_TASK_SWITCH)
+ vmx_idtv_reinject(idtv_info);
+ 
+ switch (exit_reason){
+-    unsigned long ecode;
+-    case EXIT_REASON_EXCEPTION_NMI:
++unsigned long ecode;
++case EXIT_REASON_EXCEPTION_NMI:
+         {
+             if (unlikely(intr_info & INTR_INFO_NMI_UNBLOCKED_BY_IRET) && !(idtv_info & INTR_INFO_VALID_MASK) && (vector != TRAP_double_fault)){
+                 unsigned long guest_info;
+@@ -2537,11 +2600,11 @@ switch (exit_reason){
+             domain_pause_for_debugger();
+         }
+         break;
+-    case TRAP_no_device:
++case TRAP_no_device:
+         HVMTRACE_1D(TRAP, vector);
+         vmx_fpu_dirty_intercept();
+         break;
+-    case TRAP_page_fault:
++case TRAP_page_fault:
+         __vmread(EXIT_QUALIFICATION, &exit_qualification);
+         __vmread(VM_EXIT_INTR_ERROR_CODE, &ecode);
+         regs->error_code = ecode;
+@@ -2561,9 +2624,9 @@ switch (exit_reason){
+                                 regs->error_code, exit_qualification );
+ 
+             break;
+-    }
+-    hvm_inject_page_fault(regs->error_code, exit_qualification);
+-    break;
++}
++hvm_inject_page_fault(regs->error_code, exit_qualification);
++break;
+ case TRAP_alignment_check:
+     HVMTRACE_1D(TRAP, vector);
+     vmx_propagate_intr(intr_info);

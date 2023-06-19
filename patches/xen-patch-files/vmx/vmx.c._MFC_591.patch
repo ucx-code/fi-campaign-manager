@@ -1,0 +1,27 @@
+--- vmx.c
++++ vmx.c._MFC_591	2020-10-20 16:46:26.440200974 +0100
+@@ -2668,14 +2668,23 @@ case EXIT_REASON_MSR_READ:
+         switch (hvm_msr_read_intercept(regs->ecx, &msr_content)){
+             case X86EMUL_OKAY:
+                 msr_split(regs, msr_content);
++                if (fi_enabled == 1){
++                    if (tsc_on_injection == 0){
++                        tsc_on_injection = rdtsc();
++                }
++                ++iters_after;
++                ;
++            }else{
++                ++iters_before;
+                 update_guest_eip();
++            }
+                 break;
+             case X86EMUL_EXCEPTION:
+                 hvm_inject_hw_exception(TRAP_gp_fault, 0);
+                 break;
+         }
+         break;
+-    }case EXIT_REASON_MSR_WRITE:
++}case EXIT_REASON_MSR_WRITE:
+     switch (hvm_msr_write_intercept(regs->ecx, msr_fold(regs), true)){
+         case X86EMUL_OKAY:
+             update_guest_eip();

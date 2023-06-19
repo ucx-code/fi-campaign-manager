@@ -1,0 +1,23 @@
+--- vmx.c
++++ vmx.c._MIFS_17	2020-10-20 16:43:07.992912955 +0100
+@@ -346,10 +346,17 @@ int vmx_guest_x86_mode(struct vcpu* v)
+         return 1;
+ 
+     __vmread(GUEST_CS_AR_BYTES, &cs_ar_bytes);
+-    if ( hvm_long_mode_active(v) &&
+-         likely(cs_ar_bytes & X86_SEG_AR_CS_LM_ACTIVE) )
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        if ((!!((v)->arch.hvm.guest_efer & (1 << 10))) && __builtin_expect(!!(cs_ar_bytes & (1u << 13)), 1))
+         return 8;
+-
++    }
+     return (likely(cs_ar_bytes & X86_SEG_AR_DEF_OP_SIZE) ? 4 : 2);
+ }
+ static void vmx_save_dr(struct vcpu* v)

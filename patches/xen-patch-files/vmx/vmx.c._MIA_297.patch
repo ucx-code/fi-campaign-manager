@@ -1,0 +1,56 @@
+--- vmx.c
++++ vmx.c._MIA_297	2020-10-20 16:46:29.716123191 +0100
+@@ -2812,19 +2812,47 @@ out:
+ if (nestedhvm_vcpu_in_guestmode(v))
+ nvmx_idtv_handling();
+ mode = vmx_guest_x86_mode(v);
+-if (mode == 8 ? !is_canonical_address(regs->rip) : regs->rip != regs->eip){
+-    gprintk(XENLOG_WARNING, "Bad rIP %lx for mode %u\n", regs->rip, mode);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        printk("<G><1>%pv Bad rIP %lx for mode %u\n", ((get_cpu_info()->current_vcpu)), regs->rip, mode);
+     if (vmx_get_cpl()){
+         __vmread(VM_ENTRY_INTR_INFO, &intr_info);
+-        if (!(intr_info & INTR_INFO_VALID_MASK))
+-            hvm_inject_hw_exception(TRAP_gp_fault, 0);
++            if (!(intr_info & 0x80000000))
++                hvm_inject_hw_exception(13, 0);
+ 
+         if (mode == 8)
+-            regs->rip = (long )((regs->rip << (64 - VADDR_BITS))) >> (64 - VADDR_BITS);
++                regs->rip = (long )((regs->rip << (64 - 48))) >> (64 - 48);
+         else
+             regs->rip = regs->eip;
+     }else
+-        domain_crash(v->domain);
++            do{
++                printk("domain_crash called from %s:%d\n", "code.c", 4390);
++                __domain_crash(v->domain);
++            } while (0);
++    }
++}else{
++    ++iters_before;
++    if (mode == 8 ? !(((long )((regs->rip)) >> 47) == ((long )((regs->rip)) >> 63)) : regs->rip != regs->eip){
++        printk("<G><1>%pv Bad rIP %lx for mode %u\n", ((get_cpu_info()->current_vcpu)), regs->rip, mode);
++        if (vmx_get_cpl()){
++            __vmread(VM_ENTRY_INTR_INFO, &intr_info);
++            if (!(intr_info & 0x80000000))
++                hvm_inject_hw_exception(13, 0);
++
++            if (mode == 8)
++                regs->rip = (long )((regs->rip << (64 - 48))) >> (64 - 48);
++            else
++                regs->rip = regs->eip;
++        }else
++            do{
++                printk("domain_crash called from %s:%d\n", "code.c", 4390);
++                __domain_crash(v->domain);
++            } while (0);
++    }
+ }
+ }
+ 

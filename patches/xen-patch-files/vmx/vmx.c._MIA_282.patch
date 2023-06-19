@@ -1,0 +1,25 @@
+--- vmx.c
++++ vmx.c._MIA_282	2020-10-20 16:46:23.208277715 +0100
+@@ -2636,9 +2636,21 @@ case EXIT_REASON_INVLPG:
+     vmx_invlpg_intercept(exit_qualification);
+     break;
+ case EXIT_REASON_RDTSCP:
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        hvm_inject_hw_exception(6, (-1));
++        break;
++    }
++}else{
++    ++iters_before;
+     if (!currd->arch.cpuid->extd.rdtscp){
+-        hvm_inject_hw_exception(TRAP_invalid_op, X86_EVENT_NO_EC);
++        hvm_inject_hw_exception(6, (-1));
+         break;
++    }
+ }
+ regs->rcx = v->arch.msrs->tsc_aux;
+ case EXIT_REASON_RDTSC:

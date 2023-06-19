@@ -1,0 +1,21 @@
+--- vmx.c
++++ vmx.c._MFC_570	2020-10-20 16:46:20.816334509 +0100
+@@ -2594,8 +2594,17 @@ hvm_triple_fault();
+ break;
+ case EXIT_REASON_PENDING_VIRT_INTR:
+     v->arch.hvm.vmx.exec_control &= ~CPU_BASED_VIRTUAL_INTR_PENDING;
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
+     vmx_update_cpu_exec_control(v);
+-    break;
++}
++break;
+ case EXIT_REASON_PENDING_VIRT_NMI:
+     v->arch.hvm.vmx.exec_control &= ~CPU_BASED_VIRTUAL_NMI_PENDING;
+     vmx_update_cpu_exec_control(v);

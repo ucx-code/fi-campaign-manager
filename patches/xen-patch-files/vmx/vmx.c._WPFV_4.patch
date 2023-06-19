@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._WPFV_4	2020-10-20 16:45:11.193987640 +0100
+@@ -2204,7 +2204,16 @@ if (q.gla_valid){
+ }else
+     gla = ~0ull;
+ 
+-ret = hvm_hap_nested_page_fault(gpa, gla, npfec);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ret = hvm_hap_nested_page_fault(gfn, gla, npfec);
++}else{
++    ++iters_before;
++    ret = hvm_hap_nested_page_fault(gpa, gla, npfec);
++}
+ switch (ret){
+     case 0:
+         break;

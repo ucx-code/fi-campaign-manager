@@ -1,0 +1,19 @@
+--- vmx.c
++++ vmx.c._MFC_146	2020-10-20 16:43:25.880488228 +0100
+@@ -595,7 +595,16 @@ static void vmx_ctxt_switch_from(struct
+         vmx_fpu_leave(v);
+ 
+     vmx_save_guest_msrs(v);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     vmx_restore_host_msrs();
++    }
+     vmx_save_dr(v);
+     if (v->domain->arch.hvm.pi_ops.flags & PI_CSW_FROM)
+         vmx_pi_switch_from(v);

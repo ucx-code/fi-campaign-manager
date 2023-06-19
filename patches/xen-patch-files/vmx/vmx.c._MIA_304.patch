@@ -1,0 +1,23 @@
+--- vmx.c
++++ vmx.c._MIA_304	2020-10-20 16:46:31.924070765 +0100
+@@ -2871,9 +2871,17 @@ struct domain* currd = curr->domain;
+ u32 new_asid, old_asid;
+ struct hvm_vcpu_asid* p_asid;
+ bool_t need_flush;
+-if (nestedhvm_vcpu_in_guestmode(curr) && vcpu_nestedhvm(curr).stale_np2m)
+-    return false;
+-
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    return 0;
++}else{
++    ++iters_before;
++    if (nestedhvm_vcpu_in_guestmode(curr) && ((curr)->arch.hvm.nvcpu).stale_np2m)
++        return 0;
++}
+ if (curr->domain->arch.hvm.pi_ops.vcpu_block)
+     vmx_pi_do_resume(curr);
+ 

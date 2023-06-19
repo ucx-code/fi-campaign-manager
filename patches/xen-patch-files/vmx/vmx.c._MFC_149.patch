@@ -1,0 +1,19 @@
+--- vmx.c
++++ vmx.c._MFC_149	2020-10-20 16:43:26.056484050 +0100
+@@ -603,7 +603,16 @@ static void vmx_ctxt_switch_from(struct
+ 
+ static void vmx_ctxt_switch_to(struct vcpu* v)
+ {
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     vmx_restore_guest_msrs(v);
++    }
+     vmx_restore_dr(v);
+     if (v->domain->arch.hvm.pi_ops.flags & PI_CSW_TO)
+         vmx_pi_switch_to(v);

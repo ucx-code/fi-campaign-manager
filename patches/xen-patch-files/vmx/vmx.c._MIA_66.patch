@@ -1,0 +1,44 @@
+--- vmx.c
++++ vmx.c._MIA_66	2020-10-20 16:43:36.252241959 +0100
+@@ -670,19 +670,40 @@ static void vmx_get_segment_register(str
+     reg->sel = sel;
+     reg->limit = limit;
+     reg->attr = (!(attr & (1u << 16)) << 7) | (attr & 0x7f) | ((attr >> 4) & 0xf00);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        {
++            struct segment_register* sreg = &v->arch.hvm.vmx.vm86_saved_seg[seg];
++            if (seg == x86_seg_tr)
++                *reg = *sreg;
++            else
++                if (reg->base != sreg->base || seg == x86_seg_ss){
++                    reg->attr = (seg == x86_seg_cs ? 0x9b : 0x93);
++                    *sreg = *reg;
++                }else{
++                    *reg = *sreg;
++                    reg->sel = reg->base >> 4;
++                }
++        }
++    }else{
++        ++iters_before;
+     if (v->arch.hvm.vmx.vmx_realmode && seg <= x86_seg_tr && !(v->arch.hvm.vmx.vm86_segment_mask & (1u << seg))){
+         struct segment_register* sreg = &v->arch.hvm.vmx.vm86_saved_seg[seg];
+         if (seg == x86_seg_tr)
+             *reg = *sreg;
+         else
+             if (reg->base != sreg->base || seg == x86_seg_ss){
+-                reg->attr = (seg == x86_seg_cs ? rm_cs_attr : rm_ds_attr);
++                    reg->attr = (seg == x86_seg_cs ? 0x9b : 0x93);
+                 *sreg = *reg;
+             }else{
+                 *reg = *sreg;
+                 reg->sel = reg->base >> 4;
+             }
+     }
++    }
+ }
+ 
+ static void vmx_set_segment_register(struct vcpu* v, enum x86_segment seg, struct segment_register* reg)

@@ -1,0 +1,34 @@
+--- vmx.c
++++ vmx.c._MIA_108	2020-10-20 16:44:08.591474088 +0100
+@@ -1145,12 +1145,27 @@ void vmx_inject_extint(int trap, uint8_t
+ {
+ struct vcpu* v = current;
+ u32 pin_based_cntrl;
+-if (nestedhvm_vcpu_in_guestmode(v)){
+-    pin_based_cntrl = get_vvmcs(v, PIN_BASED_VM_EXEC_CONTROL);
+-    if (pin_based_cntrl & PIN_BASED_EXT_INTR_MASK){
+-        nvmx_enqueue_n2_exceptions(v, INTR_INFO_VALID_MASK | MASK_INSR(X86_EVENTTYPE_EXT_INTR, INTR_INFO_INTR_TYPE_MASK) | MASK_INSR(trap, INTR_INFO_VECTOR_MASK), X86_EVENT_NO_EC, source);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    {
++        pin_based_cntrl = ((vmx_secondary_exec_control & 0x00004000) ? get_vvmcs_real(v, PIN_BASED_VM_EXEC_CONTROL) : get_vvmcs_virtual(((v)->arch.hvm.nvcpu).nv_vvmcx, PIN_BASED_VM_EXEC_CONTROL));
++        if (pin_based_cntrl & 0x00000001){
++            nvmx_enqueue_n2_exceptions(v, 0x80000000 | (((X86_EVENTTYPE_EXT_INTR) * ((0x700) & -(0x700))) & (0x700)) | (((trap) * ((0xff) & -(0xff))) & (0xff)), (-1), source);
+         return;
+     }
++    }
++}else{
++    ++iters_before;
++    if (nestedhvm_vcpu_in_guestmode(v)){
++        pin_based_cntrl = ((vmx_secondary_exec_control & 0x00004000) ? get_vvmcs_real(v, PIN_BASED_VM_EXEC_CONTROL) : get_vvmcs_virtual(((v)->arch.hvm.nvcpu).nv_vvmcx, PIN_BASED_VM_EXEC_CONTROL));
++        if (pin_based_cntrl & 0x00000001){
++            nvmx_enqueue_n2_exceptions(v, 0x80000000 | (((X86_EVENTTYPE_EXT_INTR) * ((0x700) & -(0x700))) & (0x700)) | (((trap) * ((0xff) & -(0xff))) & (0xff)), (-1), source);
++            return;
++        }
++    }
+ }
+ __vmx_inject_exception(trap, X86_EVENTTYPE_EXT_INTR, X86_EVENT_NO_EC);
+ }

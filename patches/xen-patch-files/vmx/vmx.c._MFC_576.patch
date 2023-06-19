@@ -1,0 +1,23 @@
+--- vmx.c
++++ vmx.c._MFC_576	2020-10-20 16:46:22.680290251 +0100
+@@ -2627,9 +2627,18 @@ case EXIT_REASON_CPUID:
+ 
+         break;
+ }case EXIT_REASON_HLT:
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
+     update_guest_eip();
+-    hvm_hlt(regs->eflags);
+-    break;
++}
++hvm_hlt(regs->eflags);
++break;
+ case EXIT_REASON_INVLPG:
+     update_guest_eip();
+     __vmread(EXIT_QUALIFICATION, &exit_qualification);

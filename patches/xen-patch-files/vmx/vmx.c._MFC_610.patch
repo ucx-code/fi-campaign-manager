@@ -1,0 +1,19 @@
+--- vmx.c
++++ vmx.c._MFC_610	2020-10-20 16:46:28.076162131 +0100
+@@ -2750,7 +2750,16 @@ case EXIT_REASON_EPT_VIOLATION:
+         paddr_t gpa;
+         __vmread(GUEST_PHYSICAL_ADDRESS, &gpa);
+         __vmread(EXIT_QUALIFICATION, &exit_qualification);
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+         ept_handle_violation(exit_qualification, gpa);
++    }
+         break;
+ }
+ case EXIT_REASON_EPT_MISCONFIG:

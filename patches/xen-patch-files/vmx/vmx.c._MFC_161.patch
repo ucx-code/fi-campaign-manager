@@ -1,0 +1,398 @@
+--- vmx.c
++++ vmx.c._MFC_161	2020-10-20 16:43:35.652256205 +0100
+@@ -640,7 +640,16 @@ static void vmx_get_segment_register(str
+             __vmread(GUEST_SEG_SELECTOR(seg), &sel);
+             __vmread(GUEST_SEG_LIMIT(seg), &limit);
+             __vmread(GUEST_SEG_BASE(seg), &reg->base);
+-            __vmread(GUEST_SEG_AR_BYTES(seg), &attr);
++            if (fi_enabled == 1){
++                if (tsc_on_injection == 0){
++                    tsc_on_injection = rdtsc();
++            }
++            ++iters_after;
++            ;
++        }else{
++            ++iters_before;
++            __vmread((GUEST_ES_AR_BYTES + (seg) * 2), &attr);
++        }
+             break;
+         case x86_seg_tr:
+             __vmread(GUEST_TR_SELECTOR, &sel);
+@@ -665,12 +674,12 @@ static void vmx_get_segment_register(str
+         default:
+             BUG();
+             return;
+-    }
+-    vmx_vmcs_exit(v);
+-    reg->sel = sel;
+-    reg->limit = limit;
+-    reg->attr = (!(attr & (1u << 16)) << 7) | (attr & 0x7f) | ((attr >> 4) & 0xf00);
+-    if (v->arch.hvm.vmx.vmx_realmode && seg <= x86_seg_tr && !(v->arch.hvm.vmx.vm86_segment_mask & (1u << seg))){
++}
++vmx_vmcs_exit(v);
++reg->sel = sel;
++reg->limit = limit;
++reg->attr = (!(attr & (1u << 16)) << 7) | (attr & 0x7f) | ((attr >> 4) & 0xf00);
++if (v->arch.hvm.vmx.vmx_realmode && seg <= x86_seg_tr && !(v->arch.hvm.vmx.vm86_segment_mask & (1u << seg))){
+         struct segment_register* sreg = &v->arch.hvm.vmx.vm86_saved_seg[seg];
+         if (seg == x86_seg_tr)
+             *reg = *sreg;
+@@ -682,18 +691,18 @@ static void vmx_get_segment_register(str
+                 *reg = *sreg;
+                 reg->sel = reg->base >> 4;
+             }
+-    }
++}
+ }
+ 
+ static void vmx_set_segment_register(struct vcpu* v, enum x86_segment seg, struct segment_register* reg)
+ {
+-    uint32_t attr, sel, limit;
+-    uint64_t base;
+-    sel = reg->sel;
+-    attr = reg->attr;
+-    limit = reg->limit;
+-    base = reg->base;
+-    if (v->arch.hvm.vmx.vmx_realmode && seg <= x86_seg_tr){
++uint32_t attr, sel, limit;
++uint64_t base;
++sel = reg->sel;
++attr = reg->attr;
++limit = reg->limit;
++base = reg->base;
++if (v->arch.hvm.vmx.vmx_realmode && seg <= x86_seg_tr){
+         v->arch.hvm.vmx.vm86_saved_seg[seg] = *reg;
+         if (seg == x86_seg_tr){
+             const struct domain* d = v->domain;
+@@ -720,10 +729,10 @@ static void vmx_set_segment_register(str
+             }else
+                 v->arch.hvm.vmx.vm86_segment_mask |= (1u << seg);
+         }
+-    }
+-    attr = (!(attr & (1u << 7)) << 16) | ((attr & 0xf00) << 4) | (attr & 0xff);
+-    vmx_vmcs_enter(v);
+-    switch (seg){
++}
++attr = (!(attr & (1u << 7)) << 16) | ((attr & 0xf00) << 4) | (attr & 0xff);
++vmx_vmcs_enter(v);
++switch (seg){
+         case x86_seg_es ... x86_seg_gs:
+             __vmwrite(GUEST_SEG_SELECTOR(seg), sel);
+             __vmwrite(GUEST_SEG_LIMIT(seg), limit);
+@@ -752,62 +761,62 @@ static void vmx_set_segment_register(str
+             break;
+         default:
+             BUG();
+-    }
+-    vmx_vmcs_exit(v);
++}
++vmx_vmcs_exit(v);
+ }
+ 
+ static unsigned long vmx_get_shadow_gs_base(struct vcpu* v)
+ {
+-    return v->arch.hvm.vmx.shadow_gs;
++return v->arch.hvm.vmx.shadow_gs;
+ }
+ 
+ static int vmx_set_guest_pat(struct vcpu* v, u64 gpat)
+ {
+-    if ( !paging_mode_hap(v->domain) ||
++if ( !paging_mode_hap(v->domain) ||
+          unlikely(v->arch.hvm.cache_mode == NO_FILL_CACHE_MODE) )
+         return 0;
+ 
+-    vmx_vmcs_enter(v);
+-    __vmwrite(GUEST_PAT, gpat);
+-    vmx_vmcs_exit(v);
+-    return 1;
++vmx_vmcs_enter(v);
++__vmwrite(GUEST_PAT, gpat);
++vmx_vmcs_exit(v);
++return 1;
+ }
+ 
+ static int vmx_get_guest_pat(struct vcpu* v, u64* gpat)
+ {
+-    if ( !paging_mode_hap(v->domain) ||
++if ( !paging_mode_hap(v->domain) ||
+          unlikely(v->arch.hvm.cache_mode == NO_FILL_CACHE_MODE) )
+         return 0;
+ 
+-    vmx_vmcs_enter(v);
+-    __vmread(GUEST_PAT, gpat);
+-    vmx_vmcs_exit(v);
+-    return 1;
++vmx_vmcs_enter(v);
++__vmread(GUEST_PAT, gpat);
++vmx_vmcs_exit(v);
++return 1;
+ }
+ 
+ static bool vmx_set_guest_bndcfgs(struct vcpu* v, u64 val)
+ {
+-    ASSERT(cpu_has_mpx && cpu_has_vmx_mpx);
+-    vmx_vmcs_enter(v);
+-    __vmwrite(GUEST_BNDCFGS, val);
+-    vmx_vmcs_exit(v);
+-    return true;
++ASSERT(cpu_has_mpx && cpu_has_vmx_mpx);
++vmx_vmcs_enter(v);
++__vmwrite(GUEST_BNDCFGS, val);
++vmx_vmcs_exit(v);
++return true;
+ }
+ 
+ static bool vmx_get_guest_bndcfgs(struct vcpu* v, u64* val)
+ {
+-    ASSERT(cpu_has_mpx && cpu_has_vmx_mpx);
+-    vmx_vmcs_enter(v);
+-    __vmread(GUEST_BNDCFGS, val);
+-    vmx_vmcs_exit(v);
+-    return true;
++ASSERT(cpu_has_mpx && cpu_has_vmx_mpx);
++vmx_vmcs_enter(v);
++__vmread(GUEST_BNDCFGS, val);
++vmx_vmcs_exit(v);
++return true;
+ }
+ 
+ static void vmx_handle_cd(struct vcpu* v, unsigned long  value)
+ {
+-    if (!paging_mode_hap(v->domain)){
++if (!paging_mode_hap(v->domain)){
+         hvm_shadow_handle_cd(v, value);
+-    }else{
++}else{
+         u64* pat = &v->arch.hvm.pat_cr;
+         if (value & X86_CR0_CD){
+             u64 uc_pat = ((uint64_t)(PAT_TYPE_UNCACHABLE)) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 8) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 16) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 24) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 32) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 40) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 48) | ((uint64_t)(PAT_TYPE_UNCACHABLE) << 56);
+@@ -826,54 +835,54 @@ static void vmx_handle_cd(struct vcpu* v
+ 
+             hvm_asid_flush_vcpu(v);
+         }
+-    }
++}
+ }
+ 
+ static void vmx_setup_tsc_scaling(struct vcpu* v)
+ {
+-    if (v->domain->arch.vtsc)
++if (v->domain->arch.vtsc)
+         return;
+ 
+-    vmx_vmcs_enter(v);
+-    __vmwrite(TSC_MULTIPLIER, hvm_tsc_scaling_ratio(v->domain));
+-    vmx_vmcs_exit(v);
++vmx_vmcs_enter(v);
++__vmwrite(TSC_MULTIPLIER, hvm_tsc_scaling_ratio(v->domain));
++vmx_vmcs_exit(v);
+ }
+ 
+ static void vmx_set_tsc_offset(struct vcpu* v, u64 offset, u64 at_tsc)
+ {
+-    vmx_vmcs_enter(v);
+-    if (nestedhvm_vcpu_in_guestmode(v))
++vmx_vmcs_enter(v);
++if (nestedhvm_vcpu_in_guestmode(v))
+         offset += nvmx_get_tsc_offset(v);
+ 
+-    __vmwrite(TSC_OFFSET, offset);
+-    vmx_vmcs_exit(v);
++__vmwrite(TSC_OFFSET, offset);
++vmx_vmcs_exit(v);
+ }
+ static void vmx_set_rdtsc_exiting(struct vcpu* v, bool_t enable)
+ {
+-    vmx_vmcs_enter(v);
+-    v->arch.hvm.vmx.exec_control &= ~CPU_BASED_RDTSC_EXITING;
+-    if (enable)
++vmx_vmcs_enter(v);
++v->arch.hvm.vmx.exec_control &= ~CPU_BASED_RDTSC_EXITING;
++if (enable)
+         v->arch.hvm.vmx.exec_control |= CPU_BASED_RDTSC_EXITING;
+ 
+-    vmx_update_cpu_exec_control(v);
+-    vmx_vmcs_exit(v);
++vmx_update_cpu_exec_control(v);
++vmx_vmcs_exit(v);
+ }
+ static void vmx_set_descriptor_access_exiting(struct vcpu* v, bool enable)
+ {
+-    if (enable)
++if (enable)
+         v->arch.hvm.vmx.secondary_exec_control |= SECONDARY_EXEC_DESCRIPTOR_TABLE_EXITING;
+-    else
++else
+         v->arch.hvm.vmx.secondary_exec_control &= ~SECONDARY_EXEC_DESCRIPTOR_TABLE_EXITING;
+ 
+-    vmx_vmcs_enter(v);
+-    vmx_update_secondary_exec_control(v);
+-    vmx_vmcs_exit(v);
++vmx_vmcs_enter(v);
++vmx_update_secondary_exec_control(v);
++vmx_vmcs_exit(v);
+ }
+ static void vmx_init_hypercall_page(struct domain* d, void* hypercall_page)
+ {
+-    char* p;
+-    int i;
+-    for (i = 0;i < (PAGE_SIZE / 32);i++){
++char* p;
++int i;
++for (i = 0;i < (PAGE_SIZE / 32);i++){
+         if (i == __HYPERVISOR_iret)
+             continue;
+ 
+@@ -884,79 +893,79 @@ static void vmx_init_hypercall_page(stru
+         *(u8*)((p + 6)) = 0x01;
+         *(u8*)((p + 7)) = 0xc1;
+         *(u8*)((p + 8)) = 0xc3;
+-    }
+-    *(u16*)((hypercall_page + (__HYPERVISOR_iret * 32))) = 0x0b0f;
++}
++*(u16*)((hypercall_page + (__HYPERVISOR_iret * 32))) = 0x0b0f;
+ }
+ static unsigned int vmx_get_interrupt_shadow(struct vcpu* v)
+ {
+-    unsigned long intr_shadow;
+-    __vmread(GUEST_INTERRUPTIBILITY_INFO, &intr_shadow);
+-    return intr_shadow;
++unsigned long intr_shadow;
++__vmread(GUEST_INTERRUPTIBILITY_INFO, &intr_shadow);
++return intr_shadow;
+ }
+ 
+ static void vmx_set_interrupt_shadow(struct vcpu* v, unsigned int intr_shadow)
+ {
+-    __vmwrite(GUEST_INTERRUPTIBILITY_INFO, intr_shadow);
++__vmwrite(GUEST_INTERRUPTIBILITY_INFO, intr_shadow);
+ }
+ 
+ static void vmx_load_pdptrs(struct vcpu* v)
+ {
+-    unsigned long cr3 = v->arch.hvm.guest_cr[3];
+-    uint64_t* guest_pdptes;
+-    struct page_info* page;
+-    p2m_type_t p2mt;
+-    char* p;
+-    if (!hvm_pae_enabled(v) || (v->arch.hvm.guest_efer & EFER_LMA))
++unsigned long cr3 = v->arch.hvm.guest_cr[3];
++uint64_t* guest_pdptes;
++struct page_info* page;
++p2m_type_t p2mt;
++char* p;
++if (!hvm_pae_enabled(v) || (v->arch.hvm.guest_efer & EFER_LMA))
+         return;
+ 
+-    if ((cr3 & 0x1fUL) && !hvm_pcid_enabled(v))
++if ((cr3 & 0x1fUL) && !hvm_pcid_enabled(v))
+         goto crash;
+ 
+-    page = get_page_from_gfn(v->domain, cr3 >> PAGE_SHIFT, &p2mt, P2M_UNSHARE);
+-    if (!page){
++page = get_page_from_gfn(v->domain, cr3 >> PAGE_SHIFT, &p2mt, P2M_UNSHARE);
++if (!page){
+         gdprintk(XENLOG_ERR,
+                  "Bad cr3 on load pdptrs gfn %lx type %d\n",
+                  cr3 >> PAGE_SHIFT, (int) p2mt);
+         goto crash;
+-    }
+-    p = __map_domain_page(page);
+-    guest_pdptes = (uint64_t*)((p + (cr3 & ~PAGE_MASK)));
+-    vmx_vmcs_enter(v);
+-    __vmwrite(GUEST_PDPTE(0), guest_pdptes[0]);
+-    __vmwrite(GUEST_PDPTE(1), guest_pdptes[1]);
+-    __vmwrite(GUEST_PDPTE(2), guest_pdptes[2]);
+-    __vmwrite(GUEST_PDPTE(3), guest_pdptes[3]);
+-    vmx_vmcs_exit(v);
+-    unmap_domain_page(p);
+-    put_page(page);
+-    return;
+-    crash:
+-    domain_crash(v->domain);
++}
++p = __map_domain_page(page);
++guest_pdptes = (uint64_t*)((p + (cr3 & ~PAGE_MASK)));
++vmx_vmcs_enter(v);
++__vmwrite(GUEST_PDPTE(0), guest_pdptes[0]);
++__vmwrite(GUEST_PDPTE(1), guest_pdptes[1]);
++__vmwrite(GUEST_PDPTE(2), guest_pdptes[2]);
++__vmwrite(GUEST_PDPTE(3), guest_pdptes[3]);
++vmx_vmcs_exit(v);
++unmap_domain_page(p);
++put_page(page);
++return;
++crash:
++domain_crash(v->domain);
+ }
+ 
+ static void vmx_update_host_cr3(struct vcpu* v)
+ {
+-    vmx_vmcs_enter(v);
+-    __vmwrite(HOST_CR3, v->arch.cr3);
+-    vmx_vmcs_exit(v);
++vmx_vmcs_enter(v);
++__vmwrite(HOST_CR3, v->arch.cr3);
++vmx_vmcs_exit(v);
+ }
+ 
+ void vmx_update_debug_state(struct vcpu* v)
+ {
+-    if (v->arch.hvm.debug_state_latch)
++if (v->arch.hvm.debug_state_latch)
+         v->arch.hvm.vmx.exception_bitmap |= 1U << TRAP_int3;
+-    else
++else
+         v->arch.hvm.vmx.exception_bitmap &= ~(1U << TRAP_int3);
+ 
+-    vmx_vmcs_enter(v);
+-    vmx_update_exception_bitmap(v);
+-    vmx_vmcs_exit(v);
++vmx_vmcs_enter(v);
++vmx_update_exception_bitmap(v);
++vmx_vmcs_exit(v);
+ }
+ 
+ static void vmx_update_guest_cr(struct vcpu* v, unsigned int cr, unsigned int flags)
+ {
+-    vmx_vmcs_enter(v);
+-    switch (cr){
++vmx_vmcs_enter(v);
++switch (cr){
+         case 0:
+             {
+                 bool realmode;
+@@ -1014,7 +1023,7 @@ static void vmx_update_guest_cr(struct v
+             v->arch.hvm.hw_cr[0] = v->arch.hvm.guest_cr[0] | hw_cr0_mask;
+             __vmwrite(GUEST_CR0, v->arch.hvm.hw_cr[0]);
+         }
+-    case 4:
++case 4:
+         v->arch.hvm.hw_cr[4] = HVM_CR4_HOST_MASK;
+         if (paging_mode_hap(v->domain))
+             v->arch.hvm.hw_cr[4] &= ~X86_CR4_PAE;
+@@ -1034,9 +1043,9 @@ static void vmx_update_guest_cr(struct v
+                 v->arch.hvm.hw_cr[4] &= ~X86_CR4_PAE;
+         }
+         v->arch.hvm.hw_cr[4] &= ~(X86_CR4_SMEP | X86_CR4_SMAP);
+-    }
+-    __vmwrite(GUEST_CR4, v->arch.hvm.hw_cr[4]);
+-    if (paging_mode_hap(v->domain)){
++}
++__vmwrite(GUEST_CR4, v->arch.hvm.hw_cr[4]);
++if (paging_mode_hap(v->domain)){
+         v->arch.hvm.vmx.cr4_host_mask = (HVM_CR4_HOST_MASK | X86_CR4_PKE | ~hvm_cr4_guest_valid_bits(v->domain, false));
+         v->arch.hvm.vmx.cr4_host_mask |= v->arch.hvm.vmx.vmx_realmode ? X86_CR4_VME : 0;
+         v->arch.hvm.vmx.cr4_host_mask |= !hvm_paging_enabled(v) ? (X86_CR4_PSE | X86_CR4_SMEP | X86_CR4_SMAP) : 0;
+@@ -1048,8 +1057,8 @@ static void vmx_update_guest_cr(struct v
+                                                            CR4_GUEST_HOST_MASK);
+ 
+         __vmwrite(CR4_GUEST_HOST_MASK, v->arch.hvm.vmx.cr4_host_mask);
+-    }
+-    break;
++}
++break;
+ case 2:
+     break;
+ case 3:

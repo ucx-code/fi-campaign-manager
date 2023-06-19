@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_284	2020-10-20 16:44:08.455477317 +0100
+@@ -1136,7 +1136,16 @@ if (error_code != X86_EVENT_NO_EC){
+     __vmwrite(VM_ENTRY_EXCEPTION_ERROR_CODE, error_code);
+     intr_fields |= INTR_INFO_DELIVER_CODE_MASK;
+ }
+-__vmwrite(VM_ENTRY_INTR_INFO, intr_fields);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    __vmwrite(VM_ENTRY_INTR_INFO, intr_fields);
++}
+ if (curr->arch.hvm.vmx.vmx_realmode)
+     curr->arch.hvm.vmx.vmx_emulate = 1;
+ }

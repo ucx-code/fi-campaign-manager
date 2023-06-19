@@ -1,0 +1,23 @@
+--- vmx.c
++++ vmx.c._MFC_582	2020-10-20 16:46:23.292275720 +0100
+@@ -2642,9 +2642,18 @@ case EXIT_REASON_RDTSCP:
+ }
+ regs->rcx = v->arch.msrs->tsc_aux;
+ case EXIT_REASON_RDTSC:
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
+     update_guest_eip();
+-    hvm_rdtsc_intercept(regs);
+-    break;
++}
++hvm_rdtsc_intercept(regs);
++break;
+ case EXIT_REASON_VMCALL:
+     HVMTRACE_1D(VMMCALL, regs->eax);
+     if (hvm_hypercall(regs) == HVM_HCALL_completed)

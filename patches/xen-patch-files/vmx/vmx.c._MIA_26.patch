@@ -1,0 +1,22 @@
+--- vmx.c
++++ vmx.c._MIA_26	2020-10-20 16:43:07.884915520 +0100
+@@ -339,9 +339,17 @@ static void vmx_cpuid_policy_changed(str
+ int vmx_guest_x86_mode(struct vcpu* v)
+ {
+     unsigned long cs_ar_bytes;
+-    if (unlikely(!(v->arch.hvm.guest_cr[0] & X86_CR0_PE)))
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
+         return 0;
+-
++    }else{
++        ++iters_before;
++        if (__builtin_expect(!!(!(v->arch.hvm.guest_cr[0] & 0x00000001)), 0))
++            return 0;
++    }
+     if (unlikely(guest_cpu_user_regs()->eflags & X86_EFLAGS_VM))
+         return 1;
+ 

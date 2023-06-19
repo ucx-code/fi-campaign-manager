@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_59	2020-10-20 16:43:06.172956168 +0100
+@@ -268,7 +268,16 @@ static void vmx_vcpu_destroy(struct vcpu
+ 
+ static void vmx_restore_host_msrs(void)
+ {
+-    wrmsrl(MSR_STAR, XEN_MSR_STAR);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        wrmsrl(0xc0000081, (((uint64_t)(0xe023) << 48) | ((uint64_t)(0xe008) << 32)));
++    }
+     wrmsrl(MSR_LSTAR, this_cpu(stubs.addr));
+     wrmsrl(MSR_SYSCALL_MASK, XEN_SYSCALL_MASK);
+ }

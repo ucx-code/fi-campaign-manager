@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_383	2020-10-20 16:44:32.670902340 +0100
+@@ -1634,7 +1634,16 @@ struct cpu_user_regs* regs = guest_cpu_u
+ unsigned long x;
+ regs->rip += get_instruction_length();
+ regs->eflags &= ~X86_EFLAGS_RF;
+-__vmread(GUEST_INTERRUPTIBILITY_INFO, &x);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    __vmread(GUEST_INTERRUPTIBILITY_INFO, &x);
++}
+ if (x & (VMX_INTR_SHADOW_STI | VMX_INTR_SHADOW_MOV_SS)){
+     x &= ~(VMX_INTR_SHADOW_STI | VMX_INTR_SHADOW_MOV_SS);
+     __vmwrite(GUEST_INTERRUPTIBILITY_INFO, x);

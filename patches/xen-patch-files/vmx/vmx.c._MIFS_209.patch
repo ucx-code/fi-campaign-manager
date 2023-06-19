@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MIFS_209	2020-10-20 16:46:27.616173053 +0100
+@@ -2734,8 +2734,17 @@ case EXIT_REASON_IO_INSTRUCTION:
+     uint16_t port = (exit_qualification >> 16) & 0xFFFF;
+     int bytes = (exit_qualification & 0x07) + 1;
+     int dir = (exit_qualification & 0x08) ? IOREQ_READ : IOREQ_WRITE;
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+     if (handle_pio(port, bytes, dir))
+         update_guest_eip();
++    }
+ }
+ break;
+ case EXIT_REASON_INVD:

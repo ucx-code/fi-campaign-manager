@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_507	2020-10-20 16:45:23.589693312 +0100
+@@ -2372,7 +2372,16 @@ unsigned long exit_qualification, exit_r
+ unsigned int vector = 0, mode;
+ struct vcpu* v = current;
+ struct domain* currd = v->domain;
+-__vmread(GUEST_RIP, &regs->rip);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    __vmread(GUEST_RIP, &regs->rip);
++}
+ __vmread(GUEST_RSP, &regs->rsp);
+ __vmread(GUEST_RFLAGS, &regs->rflags);
+ hvm_invalidate_regs_fields(regs);

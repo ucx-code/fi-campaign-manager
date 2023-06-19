@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_650	2020-10-20 16:46:36.035973130 +0100
+@@ -2933,7 +2933,16 @@ out:
+ if (unlikely(curr->arch.hvm.vmx.lbr_flags & LBR_FIXUP_MASK))
+     lbr_fixup();
+ HVMTRACE_ND(VMENTRY, 0, 1/*cycles*/, 0, 0, 0, 0, 0, 0, 0);
+-__vmwrite(GUEST_RIP, regs->rip);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    __vmwrite(GUEST_RIP, regs->rip);
++}
+ __vmwrite(GUEST_RSP, regs->rsp);
+ __vmwrite(GUEST_RFLAGS, regs->rflags | X86_EFLAGS_MBS);
+ return true;

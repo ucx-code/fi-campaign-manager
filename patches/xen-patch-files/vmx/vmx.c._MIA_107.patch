@@ -1,0 +1,22 @@
+--- vmx.c
++++ vmx.c._MIA_107	2020-10-20 16:44:08.511475987 +0100
+@@ -1137,9 +1137,18 @@ if (error_code != X86_EVENT_NO_EC){
+     intr_fields |= INTR_INFO_DELIVER_CODE_MASK;
+ }
+ __vmwrite(VM_ENTRY_INTR_INFO, intr_fields);
+-if (curr->arch.hvm.vmx.vmx_realmode)
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    curr->arch.hvm.vmx.vmx_emulate = 1;
++}else{
++    ++iters_before;
++    if (curr->arch.hvm.vmx.vmx_realmode)
+     curr->arch.hvm.vmx.vmx_emulate = 1;
+ }
++}
+ 
+ void vmx_inject_extint(int trap, uint8_t source)
+ {

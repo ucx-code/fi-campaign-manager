@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_286	2020-10-20 16:44:08.779469624 +0100
+@@ -1152,7 +1152,16 @@ if (nestedhvm_vcpu_in_guestmode(v)){
+         return;
+     }
+ }
+-__vmx_inject_exception(trap, X86_EVENTTYPE_EXT_INTR, X86_EVENT_NO_EC);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    __vmx_inject_exception(trap, X86_EVENTTYPE_EXT_INTR, (-1));
++}
+ }
+ void vmx_inject_nmi(void)
+ {

@@ -1,0 +1,22 @@
+--- vmx.c
++++ vmx.c._MIA_167	2020-10-20 16:44:32.850898067 +0100
+@@ -1639,8 +1639,17 @@ if (x & (VMX_INTR_SHADOW_STI | VMX_INTR_
+     x &= ~(VMX_INTR_SHADOW_STI | VMX_INTR_SHADOW_MOV_SS);
+     __vmwrite(GUEST_INTERRUPTIBILITY_INFO, x);
+ }
+-if (regs->eflags & X86_EFLAGS_TF)
+-    hvm_inject_hw_exception(TRAP_debug, X86_EVENT_NO_EC);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    hvm_inject_hw_exception(1, (-1));
++}else{
++    ++iters_before;
++    if (regs->eflags & 0x00000100)
++        hvm_inject_hw_exception(1, (-1));
++}
+ }
+ 
+ static void vmx_fpu_dirty_intercept(void)

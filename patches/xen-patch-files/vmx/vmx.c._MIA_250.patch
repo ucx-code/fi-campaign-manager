@@ -1,0 +1,29 @@
+--- vmx.c
++++ vmx.c._MIA_250	2020-10-20 16:45:30.929519033 +0100
+@@ -2436,11 +2436,24 @@ if (idx != vcpu_altp2m(v).p2midx){
+ }
+ }
+ vcpu_nestedhvm(v).nv_vmswitch_in_progress = 0;
++if (fi_enabled == 1){
++if (tsc_on_injection == 0){
++    tsc_on_injection = rdtsc();
++}
++++iters_after;
++{
++    paging_update_nestedmode(v);
++    if (nvmx_n2_vmexit_handler(regs, exit_reason))
++        goto out;
++}
++}else{
++++iters_before;
+ if (nestedhvm_vcpu_in_guestmode(v)){
+-paging_update_nestedmode(v);
+-if (nvmx_n2_vmexit_handler(regs, exit_reason))
++    paging_update_nestedmode(v);
++    if (nvmx_n2_vmexit_handler(regs, exit_reason))
+     goto out;
+ }
++}
+ if (unlikely(exit_reason & VMX_EXIT_REASONS_FAILED_VMENTRY))
+ return vmx_failed_vmentry(exit_reason, regs);
+ 

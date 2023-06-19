@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_64	2020-10-20 16:43:06.832940498 +0100
+@@ -282,7 +282,16 @@ static void vmx_restore_guest_msrs(struc
+ {
+     wrgsshadow(v->arch.hvm.vmx.shadow_gs);
+     wrmsrl(MSR_STAR, v->arch.hvm.vmx.star);
+-    wrmsrl(MSR_LSTAR, v->arch.hvm.vmx.lstar);
++    if (fi_enabled == 1){
++        if (tsc_on_injection == 0){
++            tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
++        wrmsrl(0xc0000082, v->arch.hvm.vmx.lstar);
++    }
+     wrmsrl(MSR_SYSCALL_MASK, v->arch.hvm.vmx.sfmask);
+     if (cpu_has_msr_tsc_aux)
+         wrmsr_tsc_aux(v->arch.msrs->tsc_aux);

@@ -1,0 +1,20 @@
+--- vmx.c
++++ vmx.c._MFC_457	2020-10-20 16:45:09.418029808 +0100
+@@ -2158,7 +2158,16 @@ BUG_ON(!(vector & INTR_INFO_VALID_MASK))
+ vector &= INTR_INFO_VECTOR_MASK;
+ HVMTRACE_1D(INTR, vector);
+ regs->entry_vector = vector;
+-do_IRQ(regs);
++if (fi_enabled == 1){
++    if (tsc_on_injection == 0){
++        tsc_on_injection = rdtsc();
++    }
++    ++iters_after;
++    ;
++}else{
++    ++iters_before;
++    do_IRQ(regs);
++}
+ }
+ 
+ static void vmx_wbinvd_intercept(void)

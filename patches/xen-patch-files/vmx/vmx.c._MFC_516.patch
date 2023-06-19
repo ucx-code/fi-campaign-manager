@@ -1,0 +1,33 @@
+--- vmx.c
++++ vmx.c._MFC_516	2020-10-20 16:45:29.533552182 +0100
+@@ -2395,9 +2395,18 @@ else
+ perfc_incra(vmexits, exit_reason);
+ switch ((uint16_t)(exit_reason)){
+     case EXIT_REASON_EXTERNAL_INTERRUPT:
++        if (fi_enabled == 1){
++            if (tsc_on_injection == 0){
++                tsc_on_injection = rdtsc();
++        }
++        ++iters_after;
++        ;
++    }else{
++        ++iters_before;
+         vmx_do_extint(regs);
++    }
+         break;
+-    case EXIT_REASON_EXCEPTION_NMI:
++case EXIT_REASON_EXCEPTION_NMI:
+         __vmread(VM_EXIT_INTR_INFO, &intr_info);
+         BUG_ON(!(intr_info & INTR_INFO_VALID_MASK));
+         vector = intr_info & INTR_INFO_VECTOR_MASK;
+@@ -2407,8 +2416,8 @@ switch ((uint16_t)(exit_reason)){
+         if ((vector == TRAP_nmi) && ((intr_info & INTR_INFO_INTR_TYPE_MASK) == MASK_INSR(X86_EVENTTYPE_NMI, INTR_INFO_INTR_TYPE_MASK))){
+             exception_table[TRAP_nmi](regs);
+             enable_nmis();
+-    }
+-    break;
++}
++break;
+ case EXIT_REASON_MCE_DURING_VMENTRY:
+     do_machine_check(regs);
+     break;
