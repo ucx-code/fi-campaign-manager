@@ -1,0 +1,63 @@
+#IPS
+L1A_IP: 192.168.66.101
+L1B_IP: 192.168.66.102
+L2_IP: 192.168.66.
+L0_IP: 192.168.66.3   #compute node -> kahvefali
+NFS: 192.168.66.12   #capri
+
+#DOMAINS
+L1A_DOMNAME: L1A
+L1B_DOMNAME: L1B
+
+
+#SSH DEFINITIONS
+USER: root
+
+#PATHS
+PATH_ALLOCATION_FILES: :/var/lib/nova/instances/nfs_server/ /nfs
+NFS_PATH: /root/nfs /nfs
+L1A_IMAGE: /var/lib/nova/instances/nestedvirt/new_image/new_debian2.cfg
+L1B_IMAGE: /var/lib/nova/instances/nestedvirt/new_image/new_debian.cfg
+L2_IMAGE: /nfs/configs/acentosbig-
+SAVE_FILE: DEST=/nfs/d.save-
+RESULTS_PATH: /root/FI_Results
+XEN_PREPROCESSED_FILES: /nfs/xen-preprocessed-source-files
+HANG_KERNEL_MODULE: /nfs/crash-files
+RESULTS_FILE: master.csv
+#MIGRATION
+L0_FLOW_GROUP: /var/lib/nova/instances/gitvmm/L0/scripts/flow_group.sh
+LAUNCH_CRASH_OUT: launch_stdout.txt 
+
+
+# ======== SW Faults ===========
+XEN_FOLDER: /root/xen-4.12.3/
+#VMI_TARGET_FILE: /root/xen-4.12.3/xen/arch/x86/hvm/vmx/vmcs.c      #vmcs
+VMI_TARGET_FILE: /root/xen-4.12.3/xen/arch/x86/hvm/vmx/vmx.c        #vmx
+#VMI_TARGET_FILE: /root/xen-4.12.3/xen/arch/x86/mm.c                #mm 
+#VMI_TARGET_FILE: "/root/xen-4.12.3/xen/arch/x86/msr.c"             #msr
+
+
+#PATCHES_FOLDER: "/root/dados_patches/xen-patch-files/vmcs"
+PATCHES_FOLDER: "/root/dados_patches/xen-patch-files/vmx"
+#PATCHES_FOLDER: "/root/dados_patches/xen-patch-files/mm"
+#PATCHES_FOLDER: "/root/dados_patches/xen-patch-files/msr"
+LAST_PATCH: "last_patch.info"
+
+VMI_SW_HELPER: /var/lib/nova/instances/gitvmm/L0/utility_apps/vmstate_extractor/sw_vmi_helper
+
+# ======= Crash Detector Variables =========
+
+CD_INTERVAL: 0.4
+CD_RETRY_COUNT: 800
+ 
+
+
+# ====== Single VM Full Load Profile =======
+NCLIENTS: 1
+CLIENT_WAITTIME: 1000 # ms
+END_TIME_HW: 600 
+END_TIME_SW: 1200 
+INJ_SLEEP_MIN: 200000 #ms
+INJ_SLEEP_MAX: 210000 # ms
+
+END_TIME_VERIFY: 15
